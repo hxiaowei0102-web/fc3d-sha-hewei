@@ -286,6 +286,17 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
 # ─── Main ──────────────────────────────────────────────
 if __name__ == "__main__":
     print(f"🕐 {datetime.now(TZ).strftime('%Y-%m-%d %H:%M:%S')} 杀和尾单杀更新")
+    # 0. 双向同步: 先拉取云端最新数据(兼容本地/云端统一更新)
+    try:
+        import subprocess
+        r = subprocess.run(["git", "pull", "--ff-only"], capture_output=True, text=True, timeout=15, cwd=BASE)
+        if "Already up to date" in r.stdout:
+            print("  🔄 本地已是最新")
+        elif r.returncode == 0:
+            print(f"  🔄 同步云端: {r.stdout.strip().split(chr(10))[0]}")
+    except Exception:
+        pass  # 没有git或网络不可用, 继续用本地数据
+
     # 1. 抓新数据
     new = fetch_latest()
     if new:
