@@ -1,7 +1,7 @@
 """
 福彩3D 杀和尾 — 云端全自动更新（单杀制）
 =============================================
-数据抓取 → 追加CSV → 单杀回测 → 生成 JSON + 静态 HTML
+6源降级获取 → 追加CSV → 单杀回测 → 生成 JSON + 静态 HTML
 GitHub Actions 三重 cron: 北京 22:00 / 23:30 / 01:00
 公式: (上期和尾 + 上期跨度 + 3) % 10
 """
@@ -61,6 +61,58 @@ def fetch_zhcw():
             "b": int(m.group(3)), "s": int(m.group(4)), "g": int(m.group(5))}
 
 
+def fetch_apihz():
+    """apihz JSON API（带key鉴权）"""
+    url = "https://api.apihz.cn/api/kaijiang/fc3d/list.php"
+    text = http_get(url)
+    if not text: return None
+    data = json.loads(text)
+    if data.get("code") != 1: return None
+    item = data["data"][0]
+    nums = str(item["code"]).zfill(3)
+    return {"issue": str(item["expect"]), "date": item["time"][:10],
+            "b": int(nums[0]), "s": int(nums[1]), "g": int(nums[2])}
+
+
+def fetch_8200():
+    """8200 JSON API"""
+    url = "https://api.8200.cn/hall/fc3d/getFc3dLotteryList?pageNo=1&pageSize=1"
+    text = http_get(url)
+    if not text: return None
+    data = json.loads(text)
+    if data.get("code") != 0: return None
+    item = data["data"]["list"][0]
+    return {"issue": str(item["lotteryNo"]), "date": item["lotteryTime"][:10],
+            "b": int(item["lotteryNumber"][0]), "s": int(item["lotteryNumber"][1]),
+            "g": int(item["lotteryNumber"][2])}
+
+
+def fetch_55128():
+    """55128 网页解析"""
+    url = "https://www.55128.cn/kjh/fcsd-history-61.htm"
+    text = http_get(url)
+    if not text: return None
+    m = re.search(r'<td>(\d{7})</td>\s*<td>(\d{4}-\d{2}-\d{2})</td>\s*<td[^>]*>\s*(\d)\s*</td>\s*<td[^>]*>\s*(\d)\s*</td>\s*<td[^>]*>\s*(\d)\s*</td>', text)
+    if not m:
+        m = re.search(r'(\d{7}).*?(\d{4}-\d{2}-\d{2}).*?(\d)\s+(\d)\s+(\d)', text, re.DOTALL)
+    if not m: return None
+    return {"issue": m.group(1), "date": m.group(2),
+            "b": int(m.group(3)), "s": int(m.group(4)), "g": int(m.group(5))}
+
+
+def fetch_cjcp():
+    """彩经网 网页解析"""
+    url = "https://www.cjcp.com.cn/kaijiang/fc3d/"
+    text = http_get(url)
+    if not text: return None
+    m = re.search(r'(\d{7})\s*期.*?(\d{4}-\d{2}-\d{2}).*?(\d)\s*(\d)\s*(\d)', text, re.DOTALL)
+    if not m:
+        m = re.search(r'<td>(\d{7})</td>.*?<td>(\d{4}-\d{2}-\d{2})</td>.*?<td>(\d)</td>.*?<td>(\d)</td>.*?<td>(\d)</td>', text, re.DOTALL)
+    if not m: return None
+    return {"issue": m.group(1), "date": m.group(2),
+            "b": int(m.group(3)), "s": int(m.group(4)), "g": int(m.group(5))}
+
+
 # ─── CSV 操作 ──────────────────────────────────────────
 def load_csv(path=CSV_PATH):
     rows = []
@@ -88,7 +140,14 @@ def append_csv(data, path=CSV_PATH):
 
 
 def fetch_latest():
-    sources = [("灰鸟API", fetch_huiniao), ("中彩网", fetch_zhcw)]
+    sources = [
+        ("灰鸟API", fetch_huiniao),
+        ("apihz",   fetch_apihz),
+        ("中彩网",  fetch_zhcw),
+        ("8200",    fetch_8200),
+        ("55128",   fetch_55128),
+        ("彩经网",  fetch_cjcp),
+    ]
     last_issue = None
     try:
         rows = load_csv()
