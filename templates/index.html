@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>福彩3D 杀和尾 · 双杀面板</title>
+<style>
+  :root { --red:#e0453a; --green:#1a9e54; --bg:#f4f6f9; --card:#fff; --line:#e6e9ef; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+         background:var(--bg); color:#222; max-width:640px; margin:0 auto; padding:12px; }
+  .card { background:var(--card); border-radius:12px; padding:16px; margin-bottom:12px;
+          box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  h1 { font-size:19px; }
+  .sub { color:#888; font-size:12px; margin-top:4px; }
+  .kills { display:flex; gap:14px; justify-content:center; margin:14px 0 6px; }
+  .ball { width:58px; height:58px; border-radius:50%; background:var(--red); color:#fff;
+          font-size:30px; font-weight:700; display:flex; align-items:center; justify-content:center;
+          box-shadow:0 2px 6px rgba(224,69,58,.4); }
+  .klabel { text-align:center; font-size:12px; color:#666; margin-top:4px; }
+  .issue { text-align:center; font-size:15px; margin-top:8px; }
+  .issue b { color:var(--red); font-size:20px; }
+  .formula { text-align:center; font-size:12px; color:#888; margin-top:6px; }
+  .alert { padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:12px; }
+  .alert.ok { background:#e8f7ee; color:var(--green); }
+  .alert.warn { background:#fff6e0; color:#b8860b; }
+  .alert.critical { background:#fde8e7; color:var(--red); font-weight:600; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:7px 4px; text-align:center; border-bottom:1px solid var(--line); }
+  thead th { position:sticky; top:0; background:#fafbfc; font-size:12px; color:#666; z-index:1; }
+  .tbl-wrap { max-height:60vh; overflow-y:auto; }
+  .hit { color:var(--green); font-weight:700; }
+  .miss { color:var(--red); font-weight:700; }
+  .stat-row { display:flex; justify-content:space-between; padding:8px 2px;
+              border-bottom:1px solid var(--line); font-size:14px; }
+  .stat-row:last-child { border-bottom:none; }
+  .win { color:var(--green); font-weight:700; }
+  .lose { color:var(--red); font-weight:700; }
+  .btn { display:block; width:100%; padding:12px; border:none; border-radius:8px;
+         background:#2b6cb0; color:#fff; font-size:15px; cursor:pointer; }
+  .tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px;
+         background:#eef1f5; color:#556; margin-left:4px; }
+</style>
+</head>
+<body>
+
+<h1>🎯 福彩3D 杀和尾 <span class="tag">双杀制</span></h1>
+<div class="sub">更新于 {{ d.meta.updated }} · 共 {{ d.meta.total_issues }} 期 · 最新 {{ d.meta.latest_issue }} ({{ d.meta.latest_number }})</div>
+
+{% if alert == 'critical' %}
+<div class="alert critical">⚠️ 滚动100期双杀率显著低于基线，触发升级条件，建议重新穷举算法</div>
+{% elif alert == 'warn' %}
+<div class="alert warn">🔶 滚动100期双杀率略低于固定基线，持续观察</div>
+{% else %}
+<div class="alert ok">✅ 滚动100期双杀率健康（≥固定基线）</div>
+{% endif %}
+
+<div class="card">
+  <div class="issue">预测期号 <b>{{ d.prediction.next_issue }}</b> 期 · 杀以下 2 个和尾</div>
+  <div class="kills">
+    {% for k in d.prediction.kills %}
+    <div><div class="ball">{{ k }}</div><div class="klabel">杀和尾</div></div>
+    {% endfor %}
+  </div>
+  <div class="formula">kill1 = {{ d.prediction.kill1 }}（{{ d.prediction.kill1_name }}） · kill2 = {{ d.prediction.kill2 }}（{{ d.kill2_eval.desc }}）</div>
+</div>
+
+<div class="card">
+  <b>命中率（引擎 vs 基线）</b>
+  {% for W in ['100','200','500','1000'] %}
+  {% set s = d.window_stats[W] %}
+  {% set b = d.baseline_fixed26[W] %}
+  <div class="stat-row">
+    <span>近 {{ W }} 期</span>
+    <span class="{{ 'win' if s.dbl_pct >= b else 'lose' }}" style="font-weight:700">双杀 {{ s.dbl_pct }}%</span>
+    <span style="color:#888;font-size:12px">杀1 {{ s.k1_pct }}% · 杀2 {{ s.k2_pct }}%</span>
+    <span style="color:#999;font-size:12px">基线 {{ b }}%</span>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <b>最新 100 期回测明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr>
+      <th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>结果</th>
+    </tr></thead>
+    <tbody>
+    {% for r in d.details %}
+    <tr>
+      <td>{{ r.issue }}</td>
+      <td>{{ r.number }}</td>
+      <td>{{ r.tail }}</td>
+      <td class="{{ 'hit' if r.hit1 else 'miss' }}">{{ r.kill1 }}</td>
+      <td class="{{ 'hit' if r.hit2 else 'miss' }}">{{ r.kill2 }}</td>
+      <td class="{{ 'hit' if r.hit else 'miss' }}">{{ '✅' if r.hit else '❌' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<button class="btn" onclick="doRefresh(this)">🔄 抓最新数据并重算</button>
+<div class="sub" id="refresh-log" style="white-space:pre-wrap;margin-top:8px"></div>
+
+<script>
+async function doRefresh(btn){
+  btn.disabled = true; btn.textContent = '刷新中…';
+  try {
+    const r = await fetch('/refresh'); const j = await r.json();
+    document.getElementById('refresh-log').textContent = j.log;
+    if (j.ok) setTimeout(()=>location.reload(), 800);
+  } catch(e){ document.getElementById('refresh-log').textContent = 'ERR '+e; }
+  btn.disabled = false; btn.textContent = '🔄 抓最新数据并重算';
+}
+</script>
+</body>
+</html>
