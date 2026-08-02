@@ -1,0 +1,1455 @@
+{
+  "meta": {
+    "updated": "2026-08-02 20:04:49",
+    "total": 8711,
+    "latest_issue": "2026203",
+    "latest_number": "435",
+    "algorithm": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
+    "window": 150,
+    "full_hit": 90.28,
+    "full_base": 90.24
+  },
+  "prediction": {
+    "next_issue": "2026204",
+    "kill": 7,
+    "experts": {
+      "A9": 7,
+      "h1s3": 7,
+      "freq_all": 6,
+      "freq50": 0,
+      "trans1": 2
+    }
+  },
+  "window_stats": {
+    "100": {
+      "n": 100,
+      "hit": 98,
+      "pct": 98.0,
+      "base_pct": 96.0,
+      "diff": 2.0
+    },
+    "200": {
+      "n": 200,
+      "hit": 193,
+      "pct": 96.5,
+      "base_pct": 95.0,
+      "diff": 1.5
+    },
+    "500": {
+      "n": 500,
+      "hit": 472,
+      "pct": 94.4,
+      "base_pct": 93.6,
+      "diff": 0.8
+    },
+    "1000": {
+      "n": 1000,
+      "hit": 937,
+      "pct": 93.7,
+      "base_pct": 91.7,
+      "diff": 2.0
+    }
+  },
+  "details": [
+    {
+      "issue": "2026203",
+      "number": "435",
+      "tail": 2,
+      "kill": 4,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026202",
+      "number": "988",
+      "tail": 5,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026201",
+      "number": "321",
+      "tail": 6,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026200",
+      "number": "912",
+      "tail": 2,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026199",
+      "number": "591",
+      "tail": 5,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026198",
+      "number": "685",
+      "tail": 9,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026197",
+      "number": "232",
+      "tail": 7,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026196",
+      "number": "419",
+      "tail": 4,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026195",
+      "number": "275",
+      "tail": 4,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026194",
+      "number": "283",
+      "tail": 3,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026193",
+      "number": "254",
+      "tail": 1,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026192",
+      "number": "425",
+      "tail": 1,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026191",
+      "number": "906",
+      "tail": 5,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026190",
+      "number": "026",
+      "tail": 8,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026189",
+      "number": "558",
+      "tail": 8,
+      "kill": 0,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 9
+      }
+    },
+    {
+      "issue": "2026188",
+      "number": "969",
+      "tail": 4,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026187",
+      "number": "023",
+      "tail": 5,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026186",
+      "number": "045",
+      "tail": 9,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026185",
+      "number": "397",
+      "tail": 9,
+      "kill": 3,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026184",
+      "number": "902",
+      "tail": 1,
+      "kill": 4,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 9
+      }
+    },
+    {
+      "issue": "2026183",
+      "number": "923",
+      "tail": 4,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 9
+      }
+    },
+    {
+      "issue": "2026182",
+      "number": "662",
+      "tail": 4,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026181",
+      "number": "818",
+      "tail": 7,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026180",
+      "number": "520",
+      "tail": 7,
+      "kill": 0,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026179",
+      "number": "993",
+      "tail": 1,
+      "kill": 1,
+      "hit": false,
+      "experts": {
+        "A9": 5,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 9
+      }
+    },
+    {
+      "issue": "2026178",
+      "number": "266",
+      "tail": 4,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026177",
+      "number": "808",
+      "tail": 6,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026176",
+      "number": "269",
+      "tail": 7,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026175",
+      "number": "421",
+      "tail": 7,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 7
+      }
+    },
+    {
+      "issue": "2026174",
+      "number": "618",
+      "tail": 5,
+      "kill": 4,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026173",
+      "number": "677",
+      "tail": 0,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026172",
+      "number": "445",
+      "tail": 3,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026171",
+      "number": "134",
+      "tail": 8,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026170",
+      "number": "805",
+      "tail": 3,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026169",
+      "number": "832",
+      "tail": 3,
+      "kill": 0,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026168",
+      "number": "130",
+      "tail": 4,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026167",
+      "number": "631",
+      "tail": 0,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026166",
+      "number": "900",
+      "tail": 9,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026165",
+      "number": "424",
+      "tail": 0,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 7
+      }
+    },
+    {
+      "issue": "2026164",
+      "number": "690",
+      "tail": 5,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 7
+      }
+    },
+    {
+      "issue": "2026163",
+      "number": "537",
+      "tail": 5,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026162",
+      "number": "585",
+      "tail": 8,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 7,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026161",
+      "number": "529",
+      "tail": 6,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026160",
+      "number": "332",
+      "tail": 8,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026159",
+      "number": "995",
+      "tail": 3,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026158",
+      "number": "178",
+      "tail": 6,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026157",
+      "number": "327",
+      "tail": 2,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026156",
+      "number": "162",
+      "tail": 9,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026155",
+      "number": "409",
+      "tail": 3,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 3,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026154",
+      "number": "377",
+      "tail": 7,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 3,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026153",
+      "number": "887",
+      "tail": 3,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 3,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026152",
+      "number": "220",
+      "tail": 4,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 3,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026151",
+      "number": "631",
+      "tail": 0,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 3,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026150",
+      "number": "720",
+      "tail": 9,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 3,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026149",
+      "number": "696",
+      "tail": 1,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 5
+      }
+    },
+    {
+      "issue": "2026148",
+      "number": "408",
+      "tail": 2,
+      "kill": 9,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026147",
+      "number": "712",
+      "tail": 0,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026146",
+      "number": "464",
+      "tail": 4,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026145",
+      "number": "279",
+      "tail": 8,
+      "kill": 3,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 7
+      }
+    },
+    {
+      "issue": "2026144",
+      "number": "726",
+      "tail": 5,
+      "kill": 3,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026143",
+      "number": "376",
+      "tail": 6,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026142",
+      "number": "894",
+      "tail": 1,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 6
+      }
+    },
+    {
+      "issue": "2026141",
+      "number": "397",
+      "tail": 9,
+      "kill": 4,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026140",
+      "number": "285",
+      "tail": 5,
+      "kill": 5,
+      "hit": false,
+      "experts": {
+        "A9": 3,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026139",
+      "number": "286",
+      "tail": 6,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026138",
+      "number": "790",
+      "tail": 6,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026137",
+      "number": "165",
+      "tail": 2,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026136",
+      "number": "889",
+      "tail": 5,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 5
+      }
+    },
+    {
+      "issue": "2026135",
+      "number": "487",
+      "tail": 9,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026134",
+      "number": "654",
+      "tail": 5,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026133",
+      "number": "080",
+      "tail": 8,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026132",
+      "number": "756",
+      "tail": 8,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026131",
+      "number": "598",
+      "tail": 2,
+      "kill": 3,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026130",
+      "number": "267",
+      "tail": 5,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026129",
+      "number": "023",
+      "tail": 5,
+      "kill": 4,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026128",
+      "number": "776",
+      "tail": 0,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026127",
+      "number": "700",
+      "tail": 7,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026126",
+      "number": "846",
+      "tail": 8,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026125",
+      "number": "954",
+      "tail": 8,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026124",
+      "number": "280",
+      "tail": 0,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026123",
+      "number": "200",
+      "tail": 2,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026122",
+      "number": "346",
+      "tail": 3,
+      "kill": 4,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 3
+      }
+    },
+    {
+      "issue": "2026121",
+      "number": "393",
+      "tail": 5,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026120",
+      "number": "734",
+      "tail": 4,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026119",
+      "number": "112",
+      "tail": 4,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026118",
+      "number": "132",
+      "tail": 6,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 3,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026117",
+      "number": "411",
+      "tail": 6,
+      "kill": 7,
+      "hit": true,
+      "experts": {
+        "A9": 7,
+        "h1s3": 7,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026116",
+      "number": "020",
+      "tail": 2,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 4,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026115",
+      "number": "581",
+      "tail": 4,
+      "kill": 1,
+      "hit": true,
+      "experts": {
+        "A9": 1,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 1
+      }
+    },
+    {
+      "issue": "2026114",
+      "number": "864",
+      "tail": 8,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026113",
+      "number": "040",
+      "tail": 4,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 8,
+        "h1s3": 0,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026112",
+      "number": "065",
+      "tail": 1,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026111",
+      "number": "863",
+      "tail": 7,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 5
+      }
+    },
+    {
+      "issue": "2026110",
+      "number": "379",
+      "tail": 9,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 4,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 9
+      }
+    },
+    {
+      "issue": "2026109",
+      "number": "195",
+      "tail": 5,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026108",
+      "number": "671",
+      "tail": 4,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 6,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 2
+      }
+    },
+    {
+      "issue": "2026107",
+      "number": "278",
+      "tail": 7,
+      "kill": 0,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 5
+      }
+    },
+    {
+      "issue": "2026106",
+      "number": "928",
+      "tail": 9,
+      "kill": 8,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 8,
+        "freq_all": 6,
+        "freq50": 8,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026105",
+      "number": "631",
+      "tail": 0,
+      "kill": 5,
+      "hit": true,
+      "experts": {
+        "A9": 5,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 0
+      }
+    },
+    {
+      "issue": "2026104",
+      "number": "482",
+      "tail": 4,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 1,
+        "freq_all": 6,
+        "freq50": 1,
+        "trans1": 3
+      }
+    }
+  ]
+}

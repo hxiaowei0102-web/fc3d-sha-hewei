@@ -7,7 +7,7 @@ GitHub Actions 三重 cron: 北京 22:00 / 23:30 / 01:00
 """
 import csv, json, os, re, sys
 from datetime import datetime, timezone, timedelta
-from collections import Counter
+from collections import Counter, defaultdict
 
 TZ = timezone(timedelta(hours=8))
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -167,8 +167,76 @@ def fetch_latest():
     return None
 
 
-# ─── 单杀引擎 ──────────────────────────────────────────
+# ─── 单杀引擎 (Hedge 5专家加权混合 v2.0) ─────────────────
+WINDOW_W = 150    # Hedge权重评估窗口
+SMOOTH = 0.02     # 权重下限
+EXPERT_KEYS = ['A9', 'h1s3', 'freq_all', 'freq50', 'trans1']
+
+
+def precompute_kills(tails):
+    """预计算每个专家每期的杀码数组 (全部只用历史)
+    数组长度 T+1, kills[e][T] 即下一期预测 (用 tails[T-1] 信息, 无泄漏)"""
+    T = len(tails)
+    ta = [t["tail"] for t in tails]
+    kills = {e: [0] * (T + 1) for e in EXPERT_KEYS}
+
+    def h1s3(i):
+        r = tails[i - 1]
+        sp = max(r["b"], r["s"], r["g"]) - min(r["b"], r["s"], r["g"])
+        return (r["tail"] + sp + 3) % 10
+
+    # 简单公式
+    for i in range(WARM, T + 1):
+        kills['A9'][i] = (9 - tails[i - 1]["tail"]) % 10
+        kills['h1s3'][i] = h1s3(i)
+
+    # 频率类
+    for e, win in (('freq_all', 0), ('freq50', 50)):
+        cnt = Counter()
+        for i in range(T + 1):
+            if i >= WARM:
+                if win == 0:
+                    cnt[ta[i - 1]] += 1
+                    tot = i - WARM
+                else:
+                    lo = max(WARM, i - win)
+                    cnt = Counter(ta[lo:i])
+                    tot = i - lo
+                if tot > 0:
+                    kills[e][i] = min(range(10), key=lambda t: cnt.get(t, 0))
+                else:
+                    kills[e][i] = h1s3(i)
+
+    # trans1 一阶转移表 (滚动近300期)
+    for i in range(WARM, T + 1):
+        lo = max(WARM, i - 300)
+        tab = defaultdict(lambda: [0.1] * 10)
+        for j in range(lo + 1, i):
+            tab[ta[j - 1]][ta[j]] += 1
+        p = tab[tails[i - 1]["tail"]]
+        kills['trans1'][i] = min(range(10), key=lambda t: p[t]) if sum(p) > 0 else h1s3(i)
+
+    return kills, ta
+
+
+def hedge_kill_from(kills, ta, i):
+    """第 i 期 Hedge 混合杀码 (只用 <=i-1 数据)"""
+    lo = max(WARM, i - WINDOW_W)
+    if i - lo >= 10:
+        ws = {}
+        for e in EXPERT_KEYS:
+            h = sum(1 for j in range(lo, i) if ta[j] != kills[e][j])
+            ws[e] = max(SMOOTH, h / (i - lo))
+    else:
+        ws = {e: 0.9 for e in EXPERT_KEYS}
+    votes = [0.0] * 10
+    for e in EXPERT_KEYS:
+        votes[kills[e][i]] += ws[e]
+    return max(range(10), key=lambda t: votes[t]), ws
+
+
 def predict(i, tails):
+    """兼容旧接口: 单杀公式 (h1+span+3) — 仅用于对照"""
     r = tails[i - 1]
     h1 = r["tail"]
     span = max(r["b"], r["s"], r["g"]) - min(r["b"], r["s"], r["g"])
@@ -183,38 +251,62 @@ def next_issue_calc(last):
 
 def compute(tails):
     T = len(tails)
-    k_next = predict(T, tails)
+    kills, ta = precompute_kills(tails)
+
+    # 预测下一期 (i=T)
+    lo = max(WARM, T - WINDOW_W)
+    ws = {}
+    for e in EXPERT_KEYS:
+        h = sum(1 for j in range(lo, T) if ta[j] != kills[e][j])
+        ws[e] = max(SMOOTH, h / (T - lo))
+    votes = [0.0] * 10
+    for e in EXPERT_KEYS:
+        votes[kills[e][T]] += ws[e]
+    k_next = max(range(10), key=lambda t: votes[t])
+    exp_next = {e: kills[e][T] for e in EXPERT_KEYS}
     next_issue = next_issue_calc(tails[-1]["issue"])
 
-    # 多窗口命中率
+    # 多窗口命中率 (Hedge vs 基线 h1s3)
     win = {}
     for W in (100, 200, 500, 1000):
         lo = max(WARM, T - W)
         n = T - lo
-        hits = sum(1 for i in range(lo, T) if tails[i]["tail"] != predict(i, tails))
-        win[W] = {"n": n, "hit": hits, "pct": round(hits / n * 100, 2)}
+        hits = 0; hits_base = 0
+        for i in range(lo, T):
+            if ta[i] != hedge_kill_from(kills, ta, i)[0]: hits += 1
+            if ta[i] != predict(i, tails): hits_base += 1
+        win[W] = {"n": n, "hit": hits, "pct": round(hits / n * 100, 2),
+                  "base_pct": round(hits_base / n * 100, 2),
+                  "diff": round((hits - hits_base) / n * 100, 2)}
 
-    # 100期明细（近→远）
+    # 100期明细（近→远）+ 各专家杀码
     details = []
     for i in range(T - 1, max(WARM, T - BACKTEST_N) - 1, -1):
-        k = predict(i, tails)
-        ok = tails[i]["tail"] != k
+        k = hedge_kill_from(kills, ta, i)[0]
+        ok = ta[i] != k
         details.append({
             "issue": tails[i]["issue"],
             "number": f"{tails[i]['b']}{tails[i]['s']}{tails[i]['g']}",
-            "tail": tails[i]["tail"], "kill": k, "hit": ok,
+            "tail": ta[i], "kill": k, "hit": ok,
+            "experts": {e: kills[e][i] for e in EXPERT_KEYS},
         })
+
+    full_hits = sum(1 for i in range(WARM, T) if ta[i] != hedge_kill_from(kills, ta, i)[0])
+    full_base = sum(1 for i in range(WARM, T) if ta[i] != predict(i, tails))
 
     data = {
         "meta": {
             "updated": datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S"),
             "total": T, "latest_issue": tails[-1]["issue"],
             "latest_number": f"{tails[-1]['b']}{tails[-1]['s']}{tails[-1]['g']}",
-            "formula": "(上期和尾 + 跨度 + 3) % 10",
-            "full_hit": round(sum(1 for i in range(WARM, T)
-                                   if tails[i]["tail"] != predict(i, tails)) / (T - WARM) * 100, 2),
+            "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
+            "window": WINDOW_W,
+            "full_hit": round(full_hits / (T - WARM) * 100, 2),
+            "full_base": round(full_base / (T - WARM) * 100, 2),
         },
-        "prediction": {"next_issue": next_issue, "kill": k_next},
+        "prediction": {"next_issue": next_issue, "kill": k_next,
+                       "experts": exp_next,
+                       "weights": {e: round(ws[e], 3) for e in EXPERT_KEYS}},
         "window_stats": win,
         "details": details,
     }
@@ -228,19 +320,37 @@ def compute(tails):
     with open(HTML_OUT, "w", encoding="utf-8") as f:
         f.write(html)
 
-    print(f"\n  单杀命中: 近100={win[100]['pct']}% 近500={win[500]['pct']}%")
-    print(f"  预测 {next_issue} 期: 杀和尾 {k_next}")
+    print(f"\n  Hedge单杀命中: 近100={win[100]['pct']}% (基{win[100]['base_pct']}%) 近500={win[500]['pct']}% (基{win[500]['base_pct']}%)")
+    print(f"  预测 {next_issue} 期: 杀和尾 {k_next} | 专家票 {exp_next}")
     return data
 
 
 def build_html(d):
     """内嵌数据的静态 HTML"""
+    def expert_label(e):
+        return {'A9': 'A9(9-上期尾)', 'h1s3': '公式(h1+span+3)',
+                'freq_all': '全史低频', 'freq50': '近50低频', 'trans1': '一阶转移表'}[e]
+    experts_html = "".join(
+        f'<div class="exp-row"><span class="exp-name">{expert_label(e)}</span>'
+        f'<span class="exp-kill">杀 {d["prediction"]["experts"][e]}</span>'
+        f'<span class="exp-w">权重 {d["prediction"]["weights"][e]}</span></div>'
+        for e in d['prediction']['experts'])
+    stats_html = "".join(
+        f'<div class="stat-row"><span>近 {w} 期</span>'
+        f'<span class="pct">{s["pct"]}%</span>'
+        f'<span style="color:#999;font-size:12px">基线{s["base_pct"]}% ({s["diff"]:+.1f}pp)</span>'
+        f'<span style="color:#999;font-size:12px">{s["hit"]}/{s["n"]}</span></div>'
+        for w, s in sorted(d['window_stats'].items()))
+    rows_html = "".join(
+        f'<tr><td>{r["issue"]}</td><td>{r["number"]}</td><td>{r["tail"]}</td>'
+        f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
+        f'<td>{"✅" if r["hit"] else "❌"}</td></tr>' for r in d['details'])
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>福彩3D 杀和尾 · 单杀</title>
+<title>福彩3D 杀和尾 · Hedge单杀</title>
 <style>
 :root{{--red:#e0453a;--green:#1a9e54;--bg:#f4f6f9;--card:#fff;--line:#e6e9ef}}
 *{{box-sizing:border-box;margin:0;padding:0}}
@@ -252,8 +362,12 @@ h1{{font-size:19px}}.sub{{color:#888;font-size:12px;margin-top:4px}}
 .ball-label{{text-align:center;font-size:13px;color:#666;margin-top:6px}}
 .issue{{text-align:center;font-size:15px}}.issue b{{color:var(--red);font-size:20px}}
 .formula-info{{text-align:center;font-size:12px;color:#888;margin:8px 0}}
-.stat-row{{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}}
-.stat-row:last-child{{border-bottom:none}}.pct{{font-weight:700}}
+.stat-row{{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}}
+.stat-row:last-child{{border-bottom:none}}.pct{{font-weight:700;color:var(--green)}}
+.exp-row{{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px}}
+.exp-row:last-child{{border-bottom:none}}
+.exp-name{{color:#444}}.exp-kill{{font-weight:700;color:var(--red)}}
+.exp-w{{color:#999;font-size:12px}}
 table{{width:100%;border-collapse:collapse;font-size:13px}}
 th,td{{padding:6px 3px;text-align:center;border-bottom:1px solid var(--line)}}
 thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-index:1}}
@@ -262,22 +376,30 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
 </style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">单杀制</span></h1>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.0</span></h1>
 <div class="sub">更新于 {d['meta']['updated']} · 共 {d['meta']['total']} 期 · 最新 {d['meta']['latest_issue']} ({d['meta']['latest_number']})</div>
 <div class="card">
   <div class="issue">预测期号 <b>{d['prediction']['next_issue']}</b> 期</div>
-  <div class="ball-wrap"><div><div class="ball">{d['prediction']['kill']}</div><div class="ball-label">杀和尾</div></div></div>
-  <div class="formula-info">公式：{d['meta']['formula']}</div>
+  <div class="ball-wrap"><div><div class="ball">{d['prediction']['kill']}</div><div class="ball-label">杀和尾 {d['prediction']['kill']}</div></div></div>
+  <div class="formula-info">算法：{d['meta']['formula']}</div>
+</div>
+<div class="card">
+  <b>本期专家投票</b>
+  {experts_html}
 </div>
 <div class="card">
   <b>单杀命中率</b>
-  {"".join(f'<div class="stat-row"><span>近 {w} 期</span><span class="pct">{s["pct"]}%</span><span style="color:#999;font-size:12px">{s["hit"]}/{s["n"]}</span></div>' for w,s in d['window_stats'].items())}
-  <div class="stat-row" style="border-top:1px solid var(--line);margin-top:4px;padding-top:10px"><span>全量(暖机后)</span><span class="pct">{d['meta']['full_hit']}%</span><span style="color:#999;font-size:12px">{d['meta']['total']-250} 期</span></div>
+  {stats_html}
+  <div class="stat-row" style="border-top:1px solid var(--line);margin-top:4px;padding-top:10px">
+    <span>全量(暖机后)</span><span class="pct">{d['meta']['full_hit']}%</span>
+    <span style="color:#999;font-size:12px">基线{d['meta']['full_base']}%</span>
+    <span style="color:#999;font-size:12px">{d['meta']['total']-250} 期</span>
+  </div>
 </div>
 <div class="card">
   <b>最新 100 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
   <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀</th><th>结果</th></tr></thead><tbody>
-  {"".join(f'<tr><td>{r["issue"]}</td><td>{r["number"]}</td><td>{r["tail"]}</td><td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td><td>{"✅" if r["hit"] else "❌"}</td></tr>' for r in d['details'])}
+  {rows_html}
   </tbody></table></div>
 </div>
 </body></html>"""
