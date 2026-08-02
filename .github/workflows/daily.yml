@@ -25,6 +25,6 @@ jobs:
         run: |
           git config user.name "fc3d-bot"
           git config user.email "bot@fc3d.local"
-          git add fc3d-history.csv single_prediction.json index.html
+          git add fc3d-history.csv single_prediction.json index.html update.py fetch_data.py .github/workflows/daily.yml
           git diff --staged --quiet || git commit -m "auto: $(date -u +'%Y-%m-%d %H:%M') UTC"
           git push

@@ -3,3 +3,6 @@ __pycache__/
 .workbuddy/
 *.py~
 .DS_Store
+# 本地交付物（报告/脚本不入库）
+make_report.py
+杀和尾天花板报告.*

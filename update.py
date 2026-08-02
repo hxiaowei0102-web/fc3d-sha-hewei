@@ -271,9 +271,13 @@ def predict(i, tails):
 
 
 def next_issue_calc(last):
+    """期号跨年回绕: 每年最多359期, 2026360+ -> 2027001
+    保守处理: 当前年末尾期号>=357 时进位到下一年001"""
     if not last: return "?"
     year = int(last[:4]); num = int(last[4:])
-    return f"{year}{num+1:03d}" if num < 365 else f"{year+1}001"
+    if num >= 357:
+        return f"{year+1}001"
+    return f"{year}{num+1:03d}"
 
 
 def compute(tails, next_code=None):
@@ -456,6 +460,9 @@ if __name__ == "__main__":
 
     # 2. 载入全量
     tails = load_csv()
+    if not tails:
+        print("  ❌ CSV 无数据或已损坏, 中止 (避免 IndexError)")
+        sys.exit(1)
     print(f"  📊 总期数: {len(tails)} | 首期 {tails[0]['issue']} | 末期 {tails[-1]['issue']}")
 
     # 3. 回测+预测+生成HTML (优先用源提供的 next_code, 跨年安全)

@@ -166,10 +166,13 @@ def append_csv(data, path=CSV_PATH):
 
 
 def next_issue_calc(last_issue):
-    """期号跨年回绕: 2026365 -> 2027001"""
+    """期号跨年回绕: 每年最多359期, 2026360+ -> 2027001
+    保守处理: 当前年末尾期号>=357 时进位到下一年001"""
     year = int(str(last_issue)[:4])
     num = int(str(last_issue)[4:])
-    return f"{year}{num + 1:03d}" if num < 365 else f"{year + 1}001"
+    if num >= 357:
+        return f"{year + 1}001"
+    return f"{year}{num + 1:03d}"
 
 
 def fetch_latest():
