@@ -1,6 +1,7 @@
 """
 福彩3D 杀和尾 — 数据抓取模块
-多源降级: 灰鸟API(主) → 中彩网(备)
+多源降级: ①灰鸟API(JSON+next_code,跨年安全) → ②17500.cn(官方全量TXT,新增)
+         → ③apihz(JSON公共key) → ④8200/55128/彩经网(历史备份) → 中彩网(缓存页,兜底)
 期号严格递增校验, 防缓存/旧数据污染
 """
 import csv, json, re, os
@@ -44,7 +45,31 @@ def fetch_huiniao():
     item = data["data"]["data"]["list"][0]
     return {"issue": str(item["code"]), "date": item["day"],
             "b": int(item["one"]), "s": int(item["two"]), "g": int(item["three"]),
-            "next_issue": item.get("next_code")}
+            "next_code": item.get("next_code")}
+
+
+def fetch_17500():
+    """② 17500.cn 官方级全量TXT (2002至今) — 取最新一行(文件末尾)
+    格式: 期号 日期 百 十 个 ... | GBK 编码 | 仅 http"""
+    url = "http://www.17500.cn/getData/3d.TXT"
+    try:
+        import urllib.request
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        })
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode("gbk", errors="ignore")
+        last = None
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line: continue
+            p = line.split()
+            if len(p) >= 5 and len(p[0]) == 7 and p[0].isdigit():
+                last = {"issue": p[0], "date": p[1],
+                        "b": int(p[2]), "s": int(p[3]), "g": int(p[4])}
+        return last
+    except Exception:
+        return None
 
 
 def fetch_zhcw():
@@ -62,7 +87,7 @@ def fetch_zhcw():
 
 
 def fetch_apihz():
-    """apihz JSON API（带key鉴权）"""
+    """③ apihz JSON API（公共key, JSON单期）"""
     url = "https://api.apihz.cn/api/kaijiang/fc3d/list.php"
     text = http_get(url)
     if not text: return None
@@ -148,14 +173,16 @@ def next_issue_calc(last_issue):
 
 
 def fetch_latest():
-    """多源依次尝试, 期号必须 > 本地最新, 否则视为缓存拒绝"""
+    """多源依次尝试, 期号必须 > 本地最新, 否则视为缓存拒绝
+    降级链: ①灰鸟 → ②17500 → ③apihz → ④8200/55128/彩经网 → 中彩网(兜底)"""
     sources = [
         ("灰鸟API", fetch_huiniao),
+        ("17500",   fetch_17500),
         ("apihz",   fetch_apihz),
-        ("中彩网",  fetch_zhcw),
         ("8200",    fetch_8200),
         ("55128",   fetch_55128),
         ("彩经网",  fetch_cjcp),
+        ("中彩网",  fetch_zhcw),
     ]
     last_issue = None
     try:
@@ -184,6 +211,6 @@ if __name__ == "__main__":
     d = fetch_latest()
     if d:
         n = append_csv(d)
-        print(f"追加 {n} 条, 下期预测期号: {d.get('next_issue') or next_issue_calc(d['issue'])}")
+        print(f"追加 {n} 条, 下期预测期号: {d.get('next_code') or next_issue_calc(d['issue'])}")
     else:
         print("无新数据")

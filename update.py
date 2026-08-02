@@ -39,6 +39,7 @@ def http_get(url, timeout=15):
 
 
 def fetch_huiniao():
+    """① 灰鸟API (JSON) — 带 next_code, 跨年安全"""
     url = "http://api.huiniao.top/interface/home/lotteryHistory?type=fcsd&page=1&limit=1"
     text = http_get(url)
     if not text: return None
@@ -46,7 +47,30 @@ def fetch_huiniao():
     if data.get("code") != 1: return None
     item = data["data"]["data"]["list"][0]
     return {"issue": str(item["code"]), "date": item["day"],
-            "b": int(item["one"]), "s": int(item["two"]), "g": int(item["three"])}
+            "b": int(item["one"]), "s": int(item["two"]), "g": int(item["three"]),
+            "next_code": str(item.get("next_code") or "")}
+
+
+def fetch_17500():
+    """② 17500.cn 官方级全量TXT (2002至今) — 取最新一行(文件末尾)
+    格式: 期号 日期 百 十 个 ... | GBK 编码 | 仅 http"""
+    url = "http://www.17500.cn/getData/3d.TXT"
+    try:
+        import urllib.request
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode("gbk", errors="ignore")
+        last = None
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line: continue
+            p = line.split()
+            if len(p) >= 5 and len(p[0]) == 7 and p[0].isdigit():
+                last = {"issue": p[0], "date": p[1],
+                        "b": int(p[2]), "s": int(p[3]), "g": int(p[4])}
+        return last
+    except Exception:
+        return None
 
 
 def fetch_zhcw():
@@ -62,7 +86,7 @@ def fetch_zhcw():
 
 
 def fetch_apihz():
-    """apihz JSON API（带key鉴权）"""
+    """③ apihz JSON API（公共key, JSON单期）"""
     url = "https://api.apihz.cn/api/kaijiang/fc3d/list.php"
     text = http_get(url)
     if not text: return None
@@ -140,13 +164,16 @@ def append_csv(data, path=CSV_PATH):
 
 
 def fetch_latest():
+    """多源降级: ①灰鸟(JSON+next_code) → ②17500(官方全量TXT,新增) → ③apihz(JSON)
+       → ④8200/55128/彩经网(历史备份) → 中彩网(缓存页,基本只剩理论存在,最后兜底)"""
     sources = [
         ("灰鸟API", fetch_huiniao),
+        ("17500",   fetch_17500),
         ("apihz",   fetch_apihz),
-        ("中彩网",  fetch_zhcw),
         ("8200",    fetch_8200),
         ("55128",   fetch_55128),
         ("彩经网",  fetch_cjcp),
+        ("中彩网",  fetch_zhcw),
     ]
     last_issue = None
     try:
@@ -249,7 +276,7 @@ def next_issue_calc(last):
     return f"{year}{num+1:03d}" if num < 365 else f"{year+1}001"
 
 
-def compute(tails):
+def compute(tails, next_code=None):
     T = len(tails)
     kills, ta = precompute_kills(tails)
 
@@ -264,7 +291,8 @@ def compute(tails):
         votes[kills[e][T]] += ws[e]
     k_next = max(range(10), key=lambda t: votes[t])
     exp_next = {e: kills[e][T] for e in EXPERT_KEYS}
-    next_issue = next_issue_calc(tails[-1]["issue"])
+    # 优先用源提供的 next_code (跨年安全), 否则按序号推算
+    next_issue = str(next_code) if next_code else next_issue_calc(tails[-1]["issue"])
 
     # 多窗口命中率 (Hedge vs 基线 h1s3)
     win = {}
@@ -421,13 +449,15 @@ if __name__ == "__main__":
 
     # 1. 抓新数据
     new = fetch_latest()
+    next_code = None
     if new:
+        next_code = new.get("next_code")
         append_csv(new)
 
     # 2. 载入全量
     tails = load_csv()
     print(f"  📊 总期数: {len(tails)} | 首期 {tails[0]['issue']} | 末期 {tails[-1]['issue']}")
 
-    # 3. 回测+预测+生成HTML
-    compute(tails)
-    print(f"  ✅ 完成 | 预测期号: {next_issue_calc(tails[-1]['issue'])} | JSON: {JSON_OUT} | HTML: {HTML_OUT}")
+    # 3. 回测+预测+生成HTML (优先用源提供的 next_code, 跨年安全)
+    compute(tails, next_code)
+    print(f"  ✅ 完成 | 预测期号: {next_code or next_issue_calc(tails[-1]['issue'])} | JSON: {JSON_OUT} | HTML: {HTML_OUT}")
