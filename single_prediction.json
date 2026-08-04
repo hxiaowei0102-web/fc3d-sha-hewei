@@ -1,27 +1,27 @@
 {
   "meta": {
-    "updated": "2026-08-04 02:30:55",
-    "total": 8713,
-    "latest_issue": "2026205",
-    "latest_number": "814",
+    "updated": "2026-08-05 00:15:13",
+    "total": 8714,
+    "latest_issue": "2026206",
+    "latest_number": "942",
     "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
     "window": 150,
     "full_hit": 90.29,
     "full_base": 90.24
   },
   "prediction": {
-    "next_issue": "2026206",
-    "kill": 3,
+    "next_issue": "2026207",
+    "kill": 5,
     "experts": {
-      "A9": 6,
-      "h1s3": 3,
+      "A9": 4,
+      "h1s3": 5,
       "freq_all": 6,
       "freq50": 0,
       "trans1": 3
     },
     "weights": {
       "A9": 0.933,
-      "h1s3": 0.933,
+      "h1s3": 0.94,
       "freq_all": 0.913,
       "freq50": 0.9,
       "trans1": 0.913
@@ -51,13 +51,27 @@
     },
     "1000": {
       "n": 1000,
-      "hit": 937,
-      "pct": 93.7,
+      "hit": 938,
+      "pct": 93.8,
       "base_pct": 91.7,
-      "diff": 2.0
+      "diff": 2.1
     }
   },
   "details": [
+    {
+      "issue": "2026206",
+      "number": "942",
+      "tail": 5,
+      "kill": 3,
+      "hit": true,
+      "experts": {
+        "A9": 6,
+        "h1s3": 3,
+        "freq_all": 6,
+        "freq50": 0,
+        "trans1": 3
+      }
+    },
     {
       "issue": "2026205",
       "number": "814",
@@ -1442,20 +1456,6 @@
         "freq_all": 6,
         "freq50": 8,
         "trans1": 5
-      }
-    },
-    {
-      "issue": "2026106",
-      "number": "928",
-      "tail": 9,
-      "kill": 8,
-      "hit": true,
-      "experts": {
-        "A9": 9,
-        "h1s3": 8,
-        "freq_all": 6,
-        "freq50": 8,
-        "trans1": 0
       }
     }
   ]
