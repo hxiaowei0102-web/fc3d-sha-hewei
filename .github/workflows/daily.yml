@@ -9,6 +9,11 @@ on:
 permissions:
   contents: write
 
+# 防排队: 同一时间只允许一个运行, 新触发的取消旧的排队
+concurrency:
+  group: fc3d-update
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
