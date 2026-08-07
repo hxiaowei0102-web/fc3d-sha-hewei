@@ -198,6 +198,10 @@ def fetch_latest():
 WINDOW_W = 150    # Hedge权重评估窗口
 SMOOTH = 0.02     # 权重下限
 EXPERT_KEYS = ['A9', 'h1s3', 'freq_all', 'freq50', 'trans1']
+EXPERT_LABELS = {
+    'A9': 'A9(9-上期尾)', 'h1s3': '公式(h1+span+3)',
+    'freq_all': '全史低频', 'freq50': '近50低频', 'trans1': '一阶转移表',
+}
 
 
 def precompute_kills(tails):
@@ -326,6 +330,21 @@ def compute(tails, next_code=None):
     full_hits = sum(1 for i in range(WARM, T) if ta[i] != hedge_kill_from(kills, ta, i)[0])
     full_base = sum(1 for i in range(WARM, T) if ta[i] != predict(i, tails))
 
+    # ── 专家级回测: 各专家独立命中率 + 投票组合优势 ──
+    expert_stats = {}
+    for e in EXPERT_KEYS:
+        s = {}
+        for W in (100, 200, 500):
+            lo = max(WARM, T - W)
+            n = T - lo
+            h = sum(1 for i in range(lo, T) if ta[i] != kills[e][i])
+            s[str(W)] = {"n": n, "hit": h, "pct": round(h / n * 100, 2)}
+        fn = T - WARM
+        fh = sum(1 for i in range(WARM, T) if ta[i] != kills[e][i])
+        s["full"] = {"n": fn, "hit": fh, "pct": round(fh / fn * 100, 2)}
+        expert_stats[e] = s
+    best_e = max(EXPERT_KEYS, key=lambda e: expert_stats[e]["full"]["pct"])
+
     data = {
         "meta": {
             "updated": datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S"),
@@ -340,6 +359,9 @@ def compute(tails, next_code=None):
                        "experts": exp_next,
                        "weights": {e: round(ws[e], 3) for e in EXPERT_KEYS}},
         "window_stats": win,
+        "expert_stats": expert_stats,
+        "best_single": {"expert": best_e, "label": EXPERT_LABELS.get(best_e, best_e),
+                        "pct": expert_stats[best_e]["full"]["pct"]},
         "details": details,
     }
 
@@ -377,6 +399,27 @@ def build_html(d):
         f'<tr><td>{r["issue"]}</td><td>{r["number"]}</td><td>{r["tail"]}</td>'
         f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
         f'<td>{"✅" if r["hit"] else "❌"}</td></tr>' for r in d['details'])
+    # 专家回测表格
+    exp_bt_rows = ""
+    if d.get('expert_stats'):
+        exp_bt_rows = "".join(
+            f'<tr><td style="text-align:left">{EXPERT_LABELS.get(e, e)}</td>'
+            f'<td>{d["expert_stats"][e]["100"]["pct"]}%</td>'
+            f'<td>{d["expert_stats"][e]["200"]["pct"]}%</td>'
+            f'<td>{d["expert_stats"][e]["500"]["pct"]}%</td>'
+            f'<td>{d["expert_stats"][e]["full"]["pct"]}%</td></tr>'
+            for e in EXPERT_KEYS)
+        exp_bt_rows += (
+            f'<tr style="font-weight:700;color:var(--green)"><td style="text-align:left">Hedge 加权投票</td>'
+            f'<td>{d["window_stats"][100]["pct"]}%</td>'
+            f'<td>{d["window_stats"][200]["pct"]}%</td>'
+            f'<td>{d["window_stats"][500]["pct"]}%</td>'
+            f'<td>{d["meta"]["full_hit"]}%</td></tr>')
+        if d.get('best_single'):
+            exp_bt_rows += (
+                f'<tr style="color:#999"><td style="text-align:left">最优单专家 {d["best_single"]["label"]}</td>'
+                f'<td colspan="4">全量 {d["best_single"]["pct"]}% (Hedge vs 最优: '
+                f'{round(d["meta"]["full_hit"] - d["best_single"]["pct"], 2):+.2f}pp)</td></tr>')
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -427,6 +470,15 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
     <span style="color:#999;font-size:12px">基线{d['meta']['full_base']}%</span>
     <span style="color:#999;font-size:12px">{d['meta']['total']-250} 期</span>
   </div>
+</div>
+<div class="card">
+  <b>专家级回测</b> <span style="color:#999;font-size:12px">（各专家独立命中率 vs 加权投票）</span>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th style="text-align:left">专家</th><th>近100</th><th>近200</th><th>近500</th><th>全量</th></tr></thead>
+    <tbody>
+    {exp_bt_rows}
+    </tbody>
+  </table></div>
 </div>
 <div class="card">
   <b>最新 100 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
