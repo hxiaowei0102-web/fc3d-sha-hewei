@@ -384,11 +384,39 @@ def build_html(d):
     def expert_label(e):
         return {'A9': 'A9(9-上期尾)', 'h1s3': '公式(h1+span+3)',
                 'freq_all': '全史低频', 'freq50': '近50低频', 'trans1': '一阶转移表'}[e]
-    experts_html = "".join(
-        f'<div class="exp-row"><span class="exp-name">{expert_label(e)}</span>'
-        f'<span class="exp-kill">杀 {d["prediction"]["experts"][e]}</span>'
-        f'<span class="exp-w">权重 {d["prediction"]["weights"][e]}</span></div>'
-        for e in d['prediction']['experts'])
+    # 每个专家的近100期回测明细 (details 已按 近→远 排列)
+    def expert_detail_rows(e):
+        rows = []
+        for r in d['details']:
+            k = r['experts'].get(e)
+            if k is None:
+                continue
+            ok = r['tail'] != k
+            rows.append(
+                f'<tr><td>{r["issue"]}</td><td>{r["number"]}</td><td>{r["tail"]}</td>'
+                f'<td class="{"hit" if ok else "miss"}">{k}</td>'
+                f'<td>{"✅" if ok else "❌"}</td></tr>')
+        return "".join(rows)
+
+    def expert_card_html(e):
+        detail_rows = expert_detail_rows(e)
+        exp100 = d.get('expert_stats', {}).get(e, {}).get('100', {})
+        pct = f'{exp100["pct"]}%' if exp100 else '—'
+        hits = f'{exp100["hit"]}/{exp100["n"]}' if exp100 else ''
+        return (
+            f'<details class="exp-detail">'
+            f'<summary class="exp-row">'
+            f'<span class="exp-name">{expert_label(e)}</span>'
+            f'<span class="exp-kill">杀 {d["prediction"]["experts"][e]}</span>'
+            f'<span class="exp-w">近100回测 {pct} {hits}</span>'
+            f'<span class="exp-toggle">▸</span>'
+            f'</summary>'
+            f'<div class="tbl-wrap" style="max-height:40vh">'
+            f'<table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>{expert_label(e)}杀</th><th>结果</th></tr></thead>'
+            f'<tbody>{detail_rows}</tbody></table>'
+            f'</div></details>')
+
+    experts_html = "".join(expert_card_html(e) for e in d['prediction']['experts'])
     stats_html = "".join(
         f'<div class="stat-row"><span>近 {w} 期</span>'
         f'<span class="pct">{s["pct"]}%</span>'
@@ -439,10 +467,16 @@ h1{{font-size:19px}}.sub{{color:#888;font-size:12px;margin-top:4px}}
 .formula-info{{text-align:center;font-size:12px;color:#888;margin:8px 0}}
 .stat-row{{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}}
 .stat-row:last-child{{border-bottom:none}}.pct{{font-weight:700;color:var(--green)}}
-.exp-row{{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px}}
+.exp-row{{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;list-style:none}}
 .exp-row:last-child{{border-bottom:none}}
 .exp-name{{color:#444}}.exp-kill{{font-weight:700;color:var(--red)}}
 .exp-w{{color:#999;font-size:12px}}
+.exp-detail{{display:block;border-bottom:1px solid var(--line)}}
+.exp-detail:last-child{{border-bottom:none}}
+.exp-detail summary::-webkit-details-marker{{display:none}}
+.exp-toggle{{color:#bbb;font-size:12px;transition:transform .2s;margin-left:8px}}
+.exp-detail[open] .exp-toggle{{transform:rotate(90deg)}}
+.exp-detail .tbl-wrap{{border-top:1px dashed var(--line);padding-top:4px}}
 table{{width:100%;border-collapse:collapse;font-size:13px}}
 th,td{{padding:6px 3px;text-align:center;border-bottom:1px solid var(--line)}}
 thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-index:1}}
@@ -459,7 +493,7 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
   <div class="formula-info">算法：{d['meta']['formula']}</div>
 </div>
 <div class="card">
-  <b>本期专家投票</b>
+  <b>本期专家投票</b> <span style="color:#999;font-size:12px">（点击专家行展开近100期回测，近→远）</span>
   {experts_html}
 </div>
 <div class="card">
