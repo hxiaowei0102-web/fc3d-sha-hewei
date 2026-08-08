@@ -6,3 +6,5 @@ __pycache__/
 # 本地交付物（报告/脚本不入库）
 make_report.py
 杀和尾天花板报告.*
+# 独立回测产物(开发分析用,不入库)
+expert_backtest.json
