@@ -1,27 +1,27 @@
 {
   "meta": {
-    "updated": "2026-08-09 01:19:44",
-    "total": 8718,
-    "latest_issue": "2026210",
-    "latest_number": "755",
+    "updated": "2026-08-09 22:39:50",
+    "total": 8719,
+    "latest_issue": "2026211",
+    "latest_number": "708",
     "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
     "window": 150,
     "full_hit": 90.29,
     "full_base": 90.25
   },
   "prediction": {
-    "next_issue": "2026211",
-    "kill": 2,
+    "next_issue": "2026212",
+    "kill": 6,
     "experts": {
-      "A9": 2,
-      "h1s3": 2,
+      "A9": 4,
+      "h1s3": 6,
       "freq_all": 6,
       "freq50": 2,
-      "trans1": 2
+      "trans1": 3
     },
     "weights": {
       "A9": 0.933,
-      "h1s3": 0.94,
+      "h1s3": 0.947,
       "freq_all": 0.92,
       "freq50": 0.893,
       "trans1": 0.92
@@ -75,8 +75,8 @@
         "pct": 92.2
       },
       "full": {
-        "n": 8468,
-        "hit": 7641,
+        "n": 8469,
+        "hit": 7642,
         "pct": 90.23
       }
     },
@@ -97,8 +97,8 @@
         "pct": 93.8
       },
       "full": {
-        "n": 8468,
-        "hit": 7642,
+        "n": 8469,
+        "hit": 7643,
         "pct": 90.25
       }
     },
@@ -119,8 +119,8 @@
         "pct": 89.6
       },
       "full": {
-        "n": 8468,
-        "hit": 7631,
+        "n": 8469,
+        "hit": 7632,
         "pct": 90.12
       }
     },
@@ -141,8 +141,8 @@
         "pct": 89.8
       },
       "full": {
-        "n": 8468,
-        "hit": 7609,
+        "n": 8469,
+        "hit": 7610,
         "pct": 89.86
       }
     },
@@ -163,8 +163,8 @@
         "pct": 91.8
       },
       "full": {
-        "n": 8468,
-        "hit": 7655,
+        "n": 8469,
+        "hit": 7656,
         "pct": 90.4
       }
     }
@@ -175,6 +175,20 @@
     "pct": 90.4
   },
   "details": [
+    {
+      "issue": "2026211",
+      "number": "708",
+      "tail": 5,
+      "kill": 2,
+      "hit": true,
+      "experts": {
+        "A9": 2,
+        "h1s3": 2,
+        "freq_all": 6,
+        "freq50": 2,
+        "trans1": 2
+      }
+    },
     {
       "issue": "2026210",
       "number": "755",
@@ -1559,20 +1573,6 @@
         "freq_all": 6,
         "freq50": 8,
         "trans1": 2
-      }
-    },
-    {
-      "issue": "2026111",
-      "number": "863",
-      "tail": 7,
-      "kill": 8,
-      "hit": true,
-      "experts": {
-        "A9": 0,
-        "h1s3": 8,
-        "freq_all": 6,
-        "freq50": 8,
-        "trans1": 5
       }
     }
   ]
