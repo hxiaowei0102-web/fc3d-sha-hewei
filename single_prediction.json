@@ -1,30 +1,30 @@
 {
   "meta": {
-    "updated": "2026-08-14 01:48:13",
-    "total": 8723,
-    "latest_issue": "2026215",
-    "latest_number": "172",
+    "updated": "2026-08-14 22:56:43",
+    "total": 8724,
+    "latest_issue": "2026216",
+    "latest_number": "935",
     "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
     "window": 150,
     "full_hit": 90.3,
     "full_base": 90.25
   },
   "prediction": {
-    "next_issue": "2026216",
-    "kill": 9,
+    "next_issue": "2026217",
+    "kill": 6,
     "experts": {
-      "A9": 9,
-      "h1s3": 9,
+      "A9": 2,
+      "h1s3": 6,
       "freq_all": 6,
       "freq50": 6,
-      "trans1": 0
+      "trans1": 2
     },
     "weights": {
       "A9": 0.927,
       "h1s3": 0.953,
-      "freq_all": 0.92,
+      "freq_all": 0.927,
       "freq50": 0.887,
-      "trans1": 0.92
+      "trans1": 0.927
     }
   },
   "window_stats": {
@@ -44,17 +44,17 @@
     },
     "500": {
       "n": 500,
-      "hit": 473,
-      "pct": 94.6,
+      "hit": 474,
+      "pct": 94.8,
       "base_pct": 93.8,
-      "diff": 0.8
+      "diff": 1.0
     },
     "1000": {
       "n": 1000,
-      "hit": 938,
-      "pct": 93.8,
+      "hit": 939,
+      "pct": 93.9,
       "base_pct": 91.8,
-      "diff": 2.0
+      "diff": 2.1
     }
   },
   "expert_stats": {
@@ -75,8 +75,8 @@
         "pct": 92.0
       },
       "full": {
-        "n": 8473,
-        "hit": 7645,
+        "n": 8474,
+        "hit": 7646,
         "pct": 90.23
       }
     },
@@ -97,8 +97,8 @@
         "pct": 93.8
       },
       "full": {
-        "n": 8473,
-        "hit": 7647,
+        "n": 8474,
+        "hit": 7648,
         "pct": 90.25
       }
     },
@@ -115,20 +115,20 @@
       },
       "500": {
         "n": 500,
-        "hit": 449,
-        "pct": 89.8
+        "hit": 450,
+        "pct": 90.0
       },
       "full": {
-        "n": 8473,
-        "hit": 7636,
+        "n": 8474,
+        "hit": 7637,
         "pct": 90.12
       }
     },
     "freq50": {
       "100": {
         "n": 100,
-        "hit": 87,
-        "pct": 87.0
+        "hit": 88,
+        "pct": 88.0
       },
       "200": {
         "n": 200,
@@ -141,8 +141,8 @@
         "pct": 89.8
       },
       "full": {
-        "n": 8473,
-        "hit": 7613,
+        "n": 8474,
+        "hit": 7614,
         "pct": 89.85
       }
     },
@@ -163,18 +163,32 @@
         "pct": 91.8
       },
       "full": {
-        "n": 8473,
-        "hit": 7660,
-        "pct": 90.4
+        "n": 8474,
+        "hit": 7661,
+        "pct": 90.41
       }
     }
   },
   "best_single": {
     "expert": "trans1",
     "label": "一阶转移表",
-    "pct": 90.4
+    "pct": 90.41
   },
   "details": [
+    {
+      "issue": "2026216",
+      "number": "935",
+      "tail": 7,
+      "kill": 9,
+      "hit": true,
+      "experts": {
+        "A9": 9,
+        "h1s3": 9,
+        "freq_all": 6,
+        "freq50": 6,
+        "trans1": 0
+      }
+    },
     {
       "issue": "2026215",
       "number": "172",
@@ -1559,20 +1573,6 @@
         "freq_all": 6,
         "freq50": 2,
         "trans1": 1
-      }
-    },
-    {
-      "issue": "2026116",
-      "number": "020",
-      "tail": 2,
-      "kill": 6,
-      "hit": true,
-      "experts": {
-        "A9": 5,
-        "h1s3": 4,
-        "freq_all": 6,
-        "freq50": 2,
-        "trans1": 0
       }
     }
   ]
