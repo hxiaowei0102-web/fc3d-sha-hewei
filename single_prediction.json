@@ -1,28 +1,28 @@
 {
   "meta": {
-    "updated": "2026-08-18 01:16:02",
-    "total": 8727,
-    "latest_issue": "2026219",
-    "latest_number": "225",
+    "updated": "2026-08-18 22:38:24",
+    "total": 8728,
+    "latest_issue": "2026220",
+    "latest_number": "373",
     "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
     "window": 150,
     "full_hit": 90.3,
     "full_base": 90.26
   },
   "prediction": {
-    "next_issue": "2026220",
+    "next_issue": "2026221",
     "kill": 6,
     "experts": {
-      "A9": 0,
-      "h1s3": 5,
+      "A9": 6,
+      "h1s3": 0,
       "freq_all": 6,
       "freq50": 6,
-      "trans1": 6
+      "trans1": 3
     },
     "weights": {
       "A9": 0.927,
       "h1s3": 0.953,
-      "freq_all": 0.927,
+      "freq_all": 0.933,
       "freq50": 0.887,
       "trans1": 0.927
     }
@@ -75,8 +75,8 @@
         "pct": 92.0
       },
       "full": {
-        "n": 8477,
-        "hit": 7649,
+        "n": 8478,
+        "hit": 7650,
         "pct": 90.23
       }
     },
@@ -97,8 +97,8 @@
         "pct": 93.8
       },
       "full": {
-        "n": 8477,
-        "hit": 7651,
+        "n": 8478,
+        "hit": 7652,
         "pct": 90.26
       }
     },
@@ -119,8 +119,8 @@
         "pct": 90.0
       },
       "full": {
-        "n": 8477,
-        "hit": 7640,
+        "n": 8478,
+        "hit": 7641,
         "pct": 90.13
       }
     },
@@ -137,13 +137,13 @@
       },
       "500": {
         "n": 500,
-        "hit": 449,
-        "pct": 89.8
+        "hit": 450,
+        "pct": 90.0
       },
       "full": {
-        "n": 8477,
-        "hit": 7617,
-        "pct": 89.85
+        "n": 8478,
+        "hit": 7618,
+        "pct": 89.86
       }
     },
     "trans1": {
@@ -163,8 +163,8 @@
         "pct": 91.8
       },
       "full": {
-        "n": 8477,
-        "hit": 7664,
+        "n": 8478,
+        "hit": 7665,
         "pct": 90.41
       }
     }
@@ -175,6 +175,20 @@
     "pct": 90.41
   },
   "details": [
+    {
+      "issue": "2026220",
+      "number": "373",
+      "tail": 3,
+      "kill": 6,
+      "hit": true,
+      "experts": {
+        "A9": 0,
+        "h1s3": 5,
+        "freq_all": 6,
+        "freq50": 6,
+        "trans1": 6
+      }
+    },
     {
       "issue": "2026219",
       "number": "225",
@@ -1556,20 +1570,6 @@
       "experts": {
         "A9": 5,
         "h1s3": 1,
-        "freq_all": 6,
-        "freq50": 2,
-        "trans1": 0
-      }
-    },
-    {
-      "issue": "2026120",
-      "number": "734",
-      "tail": 4,
-      "kill": 5,
-      "hit": true,
-      "experts": {
-        "A9": 5,
-        "h1s3": 8,
         "freq_all": 6,
         "freq50": 2,
         "trans1": 0
