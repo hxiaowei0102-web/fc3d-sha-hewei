@@ -100,15 +100,17 @@ def build_html(d):
         else:
             break
     top2_rate = top2_hits / len(rows_all)
+    # 近100期杀2表现
+    _recent = d['rows'][:100]
+    top2_r100 = sum(
+        1 for _r in _recent
+        if (sum(int(c) for c in _r['num']) % 10) not in set(sorted(range(10), key=lambda x: -_r['votes'][x])[:2])
+    )
     stats_html = (
         f'<div class="stat-row"><span>500期回测命中率（杀1码）</span>'
         f'<span class="pct">{s["rate"]*100:.2f}%</span>'
         f'<span style="color:#999;font-size:12px">基线{s["baseline"]*100:.0f}% ({s["rate"]-s["baseline"]:+.1%})</span>'
         f'<span style="color:#999;font-size:12px">{s["hit"]}/{s["total"]}</span></div>'
-        f'<div class="stat-row"><span>500期回测命中率（杀2码·Top2）</span>'
-        f'<span class="pct">{top2_rate*100:.2f}%</span>'
-        f'<span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>'
-        f'<span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>'
         f'<div class="stat-row"><span>当前连中</span><span class="pct">{s["cur_win"]} 期</span>'
         f'<span style="color:#999;font-size:12px">最大连中 {s["max_win"]} 期</span></div>'
         f'<div class="stat-row"><span>最大连错</span>'
@@ -116,6 +118,28 @@ def build_html(d):
         f'<span style="color:#999;font-size:12px">专家池均值 {s["pool_avg"]*100:.2f}%</span></div>'
         f'<div class="stat-row"><span>投票参数</span><span>K={n["n_experts"]} · win={n["win"]}</span>'
         f'<span style="color:#999;font-size:12px">网格 {d["scan_count"]} 组合选优</span></div>')
+
+    # ── 2b. 杀2码专家卡（新）──
+    top2_next = n['top3_vote'][:2]          # 下期杀2码 = 票数前2
+    balls2 = "".join(
+        f'<div style="display:inline-block;margin:0 8px"><div class="ball" style="width:56px;height:56px;font-size:30px">{c}</div>'
+        f'<div class="ball-label">杀和尾 {c}</div></div>'
+        for c in top2_next)
+    top2_card_html = f"""
+<div class="card">
+  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
+  <div class="ball-wrap">{balls2}</div>
+  <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
+  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
+    <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
+    <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
+  <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
+    <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
+    <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
+  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
+    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
+  <div class="warn" style="background:#eef7ee;border-color:#1a9e54;color:#1a6e3a">💡 杀2码 = 在杀1码基础上多杀1个，命中率98%+，但杀掉2个码后剩余8个和尾。</div>
+</div>"""
 
     # ── 3. 专家级回测（v2.0 表格样式，数据来自 leaderboard Top10）──
     lb_rows = ""
@@ -181,6 +205,8 @@ def build_html(d):
   <b>单杀命中率</b>
   {stats_html}
 </div>
+
+{top2_card_html}
 
 <div class="card">
   <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>

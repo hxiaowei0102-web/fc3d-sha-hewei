@@ -59,7 +59,23 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 
 <div class="card">
   <b>单杀命中率</b>
-  <div class="stat-row"><span>500期回测命中率（杀1码）</span><span class="pct">99.80%</span><span style="color:#999;font-size:12px">基线90% (+9.8%)</span><span style="color:#999;font-size:12px">499/500</span></div><div class="stat-row"><span>500期回测命中率（杀2码·Top2）</span><span class="pct">98.20%</span><span style="color:#999;font-size:12px">基线80% (+18.2%)</span><span style="color:#999;font-size:12px">491/500</span></div><div class="stat-row"><span>当前连中</span><span class="pct">294 期</span><span style="color:#999;font-size:12px">最大连中 294 期</span></div><div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">1 期</span><span style="color:#999;font-size:12px">专家池均值 94.91%</span></div><div class="stat-row"><span>投票参数</span><span>K=56 · win=40</span><span style="color:#999;font-size:12px">网格 144 组合选优</span></div>
+  <div class="stat-row"><span>500期回测命中率（杀1码）</span><span class="pct">99.80%</span><span style="color:#999;font-size:12px">基线90% (+9.8%)</span><span style="color:#999;font-size:12px">499/500</span></div><div class="stat-row"><span>当前连中</span><span class="pct">294 期</span><span style="color:#999;font-size:12px">最大连中 294 期</span></div><div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">1 期</span><span style="color:#999;font-size:12px">专家池均值 94.91%</span></div><div class="stat-row"><span>投票参数</span><span>K=56 · win=40</span><span style="color:#999;font-size:12px">网格 144 组合选优</span></div>
+</div>
+
+
+<div class="card">
+  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
+  <div class="ball-wrap"><div style="display:inline-block;margin:0 8px"><div class="ball" style="width:56px;height:56px;font-size:30px">3</div><div class="ball-label">杀和尾 3</div></div><div style="display:inline-block;margin:0 8px"><div class="ball" style="width:56px;height:56px;font-size:30px">9</div><div class="ball-label">杀和尾 9</div></div></div>
+  <div class="formula-info">下期 2026223 杀和尾 3、9（票数前2）</div>
+  <div class="stat-row"><span>500期回测命中率</span><span class="pct">98.20%</span>
+    <span style="color:#999;font-size:12px">基线80% (+18.2%)</span>
+    <span style="color:#999;font-size:12px">491/500</span></div>
+  <div class="stat-row"><span>近100期命中</span><span class="pct">98.0%</span>
+    <span style="color:#999;font-size:12px">(98/100)</span>
+    <span style="color:#999;font-size:12px">当前连中 0 期</span></div>
+  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">1 期</span>
+    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
+  <div class="warn" style="background:#eef7ee;border-color:#1a9e54;color:#1a6e3a">💡 杀2码 = 在杀1码基础上多杀1个，命中率98%+，但杀掉2个码后剩余8个和尾。</div>
 </div>
 
 <div class="card">
