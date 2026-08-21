@@ -28,11 +28,14 @@ def load_tails(path=CSV_PATH):
     with open(path, "r", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             try:
+                h, t, o = int(r["hundreds"]), int(r["tens"]), int(r["ones"])
                 rows.append({"issue": r["issue"],
-                             "b": int(r["hundreds"]), "s": int(r["tens"]), "g": int(r["ones"]),
-                             "tail": (int(r["hundreds"]) + int(r["tens"]) + int(r["ones"])) % 10,
-                             "span": max(int(r["hundreds"]), int(r["tens"]), int(r["ones"]))
-                                    - min(int(r["hundreds"]), int(r["tens"]), int(r["ones"]))})
+                             "b": h, "s": t, "g": o,
+                             "tail": (h + t + o) % 10,
+                             "sum": h + t + o,
+                             "span": max(h, t, o) - min(h, t, o),
+                             "bd": h - t,  # 百-十差
+                             "sd": t - o})  # 十-个差
             except Exception:
                 continue
     return rows
@@ -107,6 +110,75 @@ def build_pool():
         desc = f"{pname}位最低频"
         pool.append((name, desc, (lambda P: (lambda r, tails, i, ta:
             min(range(10), key=lambda t: Counter([x[P] for x in tails[WARM:i]]).get(t, 0))))(pos)))
+
+    # ── 第三轮: 新特征维度 ──
+    # 7. 百位交叉线性族 (a*百 + b*跨 + c) % 10
+    for a in range(0, 4):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                if a == 0 and b == 0:
+                    continue
+                name = f"LB{a}{b}{c}"
+                desc = f"({a}*百+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["b"] + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 8. 十位交叉线性族 (a*十 + b*跨 + c) % 10
+    for a in range(0, 4):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                if a == 0 and b == 0:
+                    continue
+                name = f"LS{a}{b}{c}"
+                desc = f"({a}*十+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["s"] + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 9. 和值线性族 (a*sum + b) % 10
+    for a in range(1, 4):
+        for b in range(0, 10):
+            name = f"S{a}{b}"
+            desc = f"({a}*和值+{b})%10"
+            pool.append((name, desc,
+                (lambda A, B: (lambda r, tails, i, ta:
+                    (A * r["sum"] + B) % 10))(a, b)))
+
+    # 10. 位差线性族 (a*bd + b*sd + c) % 10
+    for a in range(-2, 3):
+        for b in range(-2, 3):
+            for c in range(0, 10):
+                if a == 0 and b == 0:
+                    continue
+                name = f"D{a}{b}{c}"
+                desc = f"({a}*百十差+{b}*十个差+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["bd"] + B * r["sd"] + C) % 10))(a, b, c)))
+
+    # 11. 平方非线性族 (a*尾^2 + b*跨 + c) % 10
+    for a in (1, 2):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                name = f"Q{a}{b}{c}"
+                desc = f"({a}*尾²+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["tail"] * r["tail"] + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 12. 尾+百+十三维族 (a*尾+b*百+c*十+d) % 10
+    for a in range(0, 3):
+        for b in range(0, 3):
+            for c in range(0, 3):
+                for d in range(0, 10):
+                    if a == 0 and b == 0 and c == 0:
+                        continue
+                    name = f"X{a}{b}{c}{d}"
+                    desc = f"({a}*尾+{b}*百+{c}*十+{d})%10"
+                    pool.append((name, desc,
+                        (lambda A, B, C, D: (lambda r, tails, i, ta:
+                            (A * r["tail"] + B * r["b"] + C * r["s"] + D) % 10))(a, b, c, d)))
 
     return pool
 
