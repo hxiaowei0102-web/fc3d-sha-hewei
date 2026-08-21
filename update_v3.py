@@ -89,6 +89,18 @@ def main():
         import hedge_core
         hedge_core.main()
 
+    # ---- [4.5] 发布账本：记录本次发布 + 补标已开奖 ----
+    try:
+        import ledger
+        from engine import load_data as _ld
+        _issues, _hh, _tt, _oo = _ld()
+        ledger.settle_past(_issues, _hh, _tt, _oo)     # 先补标旧记录
+        with open('cache/result.json', 'r', encoding='utf-8') as _f:
+            _rj = json.load(_f)
+        ledger.record_publication(_rj['next'], _rj['data_info']['last'])
+    except Exception as e:
+        print(f"  ⚠ 账本记录失败(不影响主流程): {str(e)[:80]}")
+
     # ---- [5/5] 生成网页 ----
     print("\n[5/5] 生成静态网页")
     import gen_site

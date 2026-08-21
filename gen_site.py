@@ -77,11 +77,78 @@ def esc(s):
     return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
+def load_ledger():
+    """读取发布账本（逐期真实预测记录）。失败返回空列表。"""
+    try:
+        import json as _json
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache', 'predictions.json')
+        with open(p, 'r', encoding='utf-8') as f:
+            return _json.load(f).get('records', [])
+    except Exception:
+        return []
+
+
+def ledger_rows_html(records, limit=100):
+    """账本渲染：逐期真实发布记录（近→远）。含发布时刻列。"""
+    rows_html = ""
+    for r in records[:limit]:
+        hit = r.get('hit')
+        kill = r.get('kill')
+        tail = r.get('tail')
+        if tail is None or hit is None:
+            # 未开奖：显示"待开奖"
+            cls = ""
+            rows_html += (
+                f'<tr><td class="iss">{esc(r.get("issue",""))}</td>'
+                f'<td class="num">—</td><td class="num">—</td>'
+                f'<td class="t3">—</td>'
+                f'<td class="num">{kill}</td>'
+                f'<td style="color:#bbb">⏳</td>'
+                f'<td class="t3">{esc("·".join(str(x) for x in r.get("top2", [])))}</td>'
+                f'<td class="t3">{esc(r.get("published_at","")[:16])}</td></tr>')
+        else:
+            cls = "miss-row" if not hit else ""
+            ok2 = tail not in set(r.get("top2", []))
+            rows_html += (
+                f'<tr class="{cls}"><td class="iss">{esc(r.get("issue",""))}</td>'
+                f'<td class="num">{esc(r.get("num",""))}</td>'
+                f'<td class="num" style="color:var(--green)">{tail}</td>'
+                f'<td class="t3">—</td>'
+                f'<td class="{"hit" if hit else "miss"}">{kill}</td>'
+                f'<td>{"✅" if hit else "❌"}</td>'
+                f'<td class="{"hit" if ok2 else "miss"}">{"✅" if ok2 else "❌"}</td>'
+                f'<td class="t3">{esc("·".join(str(x) for x in r.get("top2", [])))}</td>'
+                f'<td class="t3">{esc(r.get("published_at","")[:16])}</td></tr>')
+    return rows_html
+
+
+def ledger_stats(records):
+    """账本命中率统计（只看已开奖的）"""
+    settled = [r for r in records if r.get('hit') is not None]
+    if not settled:
+        return None
+    hits = sum(1 for r in settled if r['hit'])
+    top2_hits = sum(1 for r in settled if r.get('tail') not in set(r.get('top2', [])))
+    cur = 0
+    for r in settled:  # records 近→远
+        if r['hit']:
+            cur += 1
+        else:
+            break
+    return {'total': len(settled), 'hits': hits, 'rate': hits / len(settled),
+            'top2_rate': top2_hits / len(settled), 'cur_win': cur}
+
+
 def build_html(d):
     n = d['next']
     s = d['summary']
     di = d['data_info']
     pi = d['pool_info']
+
+    # 真实发布记录（账本）
+    ledger_records = load_ledger()
+    ledger_rows = ledger_rows_html(ledger_records, limit=100)
+    ledger_stat = ledger_stats(ledger_records)
 
     # ── 1. 本期专家投票（v2.0 exp-row 样式，静态渲染，无展开明细）──
     experts_html = ""
@@ -232,7 +299,14 @@ def build_html(d):
 </div>
 
 <div class="card">
-  <b>最新 500 期明细</b> <span style="color:#999;font-size:12px">（近 → 远 · 手机左右滑动看全）</span>
+  <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 近→远 · 手机左右滑动看全</span>
+  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
+  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
+  <tbody>{ledger_rows}</tbody></table></div></div>
+</div>
+
+<div class="card">
+  <b>最新 500 期明细（回测重放）</b> <span style="color:#999;font-size:12px">近 → 远 · 手机左右滑动看全 · 非发布记录，仅供算法参考</span>
   <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span></div>
   <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>首席专家</th></tr></thead>
   <tbody>{rows_html}</tbody></table></div></div>
