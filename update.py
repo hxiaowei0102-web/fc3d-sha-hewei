@@ -194,13 +194,14 @@ def fetch_latest():
     return None
 
 
-# ─── 单杀引擎 (Hedge 5专家加权混合 v2.0) ─────────────────
+# ─── 单杀引擎 (Hedge 6专家加权混合 v2.1) ─────────────────
 WINDOW_W = 150    # Hedge权重评估窗口
 SMOOTH = 0.02     # 权重下限
-EXPERT_KEYS = ['A9', 'h1s3', 'freq_all', 'freq50', 'trans1']
+EXPERT_KEYS = ['A9', 'h1s3', 'freq_all', 'freq50', 'trans1', 'L038']
 EXPERT_LABELS = {
     'A9': 'A9(9-上期尾)', 'h1s3': '公式(h1+span+3)',
     'freq_all': '全史低频', 'freq50': '近50低频', 'trans1': '一阶转移表',
+    'L038': '公式(3*跨+8)',
 }
 
 
@@ -220,6 +221,9 @@ def precompute_kills(tails):
     for i in range(WARM, T + 1):
         kills['A9'][i] = (9 - tails[i - 1]["tail"]) % 10
         kills['h1s3'][i] = h1s3(i)
+        r = tails[i - 1]
+        sp = max(r["b"], r["s"], r["g"]) - min(r["b"], r["s"], r["g"])
+        kills['L038'][i] = (3 * sp + 8) % 10  # 网格扫描选优: (0*尾+3*跨+8)%10
 
     # 频率类
     for e, win in (('freq_all', 0), ('freq50', 50)):
@@ -350,7 +354,7 @@ def compute(tails, next_code=None):
             "updated": datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S"),
             "total": T, "latest_issue": tails[-1]["issue"],
             "latest_number": f"{tails[-1]['b']}{tails[-1]['s']}{tails[-1]['g']}",
-            "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
+            "formula": "Hedge 6专家加权混合 (A9+h1s3+全史频+近50频+转移表+3跨8)",
             "window": WINDOW_W,
             "full_hit": round(full_hits / (T - WARM) * 100, 2),
             "full_base": round(full_base / (T - WARM) * 100, 2),
@@ -383,7 +387,8 @@ def build_html(d):
     """内嵌数据的静态 HTML"""
     def expert_label(e):
         return {'A9': 'A9(9-上期尾)', 'h1s3': '公式(h1+span+3)',
-                'freq_all': '全史低频', 'freq50': '近50低频', 'trans1': '一阶转移表'}[e]
+                'freq_all': '全史低频', 'freq50': '近50低频', 'trans1': '一阶转移表',
+                'L038': '公式(3*跨+8)'}[e]
     # 每个专家的近100期回测明细 (details 已按 近→远 排列)
     def expert_detail_rows(e):
         rows = []
@@ -485,7 +490,7 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
 </style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.0</span></h1>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.1</span></h1>
 <div class="sub">更新于 {d['meta']['updated']} · 共 {d['meta']['total']} 期 · 最新 {d['meta']['latest_issue']} ({d['meta']['latest_number']})</div>
 <div class="card">
   <div class="issue">预测期号 <b>{d['prediction']['next_issue']}</b> 期</div>

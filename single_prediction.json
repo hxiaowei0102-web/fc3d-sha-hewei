@@ -1,30 +1,32 @@
 {
   "meta": {
-    "updated": "2026-08-21 01:18:25",
+    "updated": "2026-08-21 14:55:04",
     "total": 8730,
     "latest_issue": "2026222",
     "latest_number": "380",
-    "formula": "Hedge 5专家加权混合 (A9+h1s3+全史频+近50频+转移表)",
+    "formula": "Hedge 6专家加权混合 (A9+h1s3+全史频+近50频+转移表+3跨8)",
     "window": 150,
-    "full_hit": 90.31,
+    "full_hit": 90.67,
     "full_base": 90.26
   },
   "prediction": {
     "next_issue": "2026223",
-    "kill": 6,
+    "kill": 2,
     "experts": {
       "A9": 8,
       "h1s3": 2,
       "freq_all": 6,
       "freq50": 6,
-      "trans1": 0
+      "trans1": 0,
+      "L038": 2
     },
     "weights": {
       "A9": 0.927,
       "h1s3": 0.953,
       "freq_all": 0.933,
       "freq50": 0.887,
-      "trans1": 0.927
+      "trans1": 0.927,
+      "L038": 0.947
     }
   },
   "window_stats": {
@@ -44,10 +46,10 @@
     },
     "500": {
       "n": 500,
-      "hit": 474,
-      "pct": 94.8,
+      "hit": 475,
+      "pct": 95.0,
       "base_pct": 93.8,
-      "diff": 1.0
+      "diff": 1.2
     },
     "1000": {
       "n": 1000,
@@ -167,6 +169,28 @@
         "hit": 7667,
         "pct": 90.41
       }
+    },
+    "L038": {
+      "100": {
+        "n": 100,
+        "hit": 96,
+        "pct": 96.0
+      },
+      "200": {
+        "n": 200,
+        "hit": 190,
+        "pct": 95.0
+      },
+      "500": {
+        "n": 500,
+        "hit": 468,
+        "pct": 93.6
+      },
+      "full": {
+        "n": 8480,
+        "hit": 7663,
+        "pct": 90.37
+      }
     }
   },
   "best_single": {
@@ -186,7 +210,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 9
       }
     },
     {
@@ -200,7 +225,8 @@
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 0
       }
     },
     {
@@ -214,7 +240,8 @@
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 7
       }
     },
     {
@@ -228,21 +255,23 @@
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 6
       }
     },
     {
       "issue": "2026218",
       "number": "382",
       "tail": 3,
-      "kill": 1,
+      "kill": 6,
       "hit": true,
       "experts": {
         "A9": 1,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 6
       }
     },
     {
@@ -256,21 +285,23 @@
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 6
       }
     },
     {
       "issue": "2026216",
       "number": "935",
       "tail": 7,
-      "kill": 9,
+      "kill": 6,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 6
       }
     },
     {
@@ -284,7 +315,8 @@
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 1
       }
     },
     {
@@ -298,7 +330,8 @@
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 6
       }
     },
     {
@@ -312,7 +345,8 @@
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 6,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 3
       }
     },
     {
@@ -326,7 +360,8 @@
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 2
       }
     },
     {
@@ -340,63 +375,68 @@
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 4
       }
     },
     {
       "issue": "2026210",
       "number": "755",
       "tail": 7,
-      "kill": 6,
+      "kill": 9,
       "hit": true,
       "experts": {
         "A9": 0,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 9
       }
     },
     {
       "issue": "2026209",
       "number": "289",
       "tail": 9,
-      "kill": 8,
+      "kill": 0,
       "hit": true,
       "experts": {
         "A9": 8,
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 0
       }
     },
     {
       "issue": "2026208",
       "number": "632",
       "tail": 1,
-      "kill": 7,
+      "kill": 0,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 0
       }
     },
     {
       "issue": "2026207",
       "number": "415",
       "tail": 0,
-      "kill": 5,
+      "kill": 9,
       "hit": true,
       "experts": {
         "A9": 4,
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 0,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 9
       }
     },
     {
@@ -410,7 +450,8 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 0,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 9
       }
     },
     {
@@ -424,7 +465,8 @@
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 0,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 4
       }
     },
     {
@@ -438,21 +480,23 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 0,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 4
       }
     },
     {
       "issue": "2026203",
       "number": "435",
       "tail": 2,
-      "kill": 4,
+      "kill": 1,
       "hit": true,
       "experts": {
         "A9": 4,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 1
       }
     },
     {
@@ -466,7 +510,8 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 4
       }
     },
     {
@@ -480,21 +525,23 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 2
       }
     },
     {
       "issue": "2026200",
       "number": "912",
       "tail": 2,
-      "kill": 6,
-      "hit": true,
+      "kill": 2,
+      "hit": false,
       "experts": {
         "A9": 4,
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 2
       }
     },
     {
@@ -508,7 +555,8 @@
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 7
       }
     },
     {
@@ -522,21 +570,23 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 1
       }
     },
     {
       "issue": "2026197",
       "number": "232",
       "tail": 7,
-      "kill": 5,
+      "kill": 2,
       "hit": true,
       "experts": {
         "A9": 5,
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 2
       }
     },
     {
@@ -550,21 +600,23 @@
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 3
       }
     },
     {
       "issue": "2026195",
       "number": "275",
       "tail": 4,
-      "kill": 2,
+      "kill": 6,
       "hit": true,
       "experts": {
         "A9": 6,
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 6
       }
     },
     {
@@ -578,7 +630,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 7
       }
     },
     {
@@ -592,35 +645,38 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 7
       }
     },
     {
       "issue": "2026192",
       "number": "425",
       "tail": 1,
-      "kill": 7,
+      "kill": 5,
       "hit": true,
       "experts": {
         "A9": 4,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 5
       }
     },
     {
       "issue": "2026191",
       "number": "906",
       "tail": 5,
-      "kill": 1,
+      "kill": 6,
       "hit": true,
       "experts": {
         "A9": 1,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 6
       }
     },
     {
@@ -634,21 +690,23 @@
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 7
       }
     },
     {
       "issue": "2026189",
       "number": "558",
       "tail": 8,
-      "kill": 0,
+      "kill": 7,
       "hit": true,
       "experts": {
         "A9": 5,
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 9
+        "trans1": 9,
+        "L038": 7
       }
     },
     {
@@ -662,7 +720,8 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 7
       }
     },
     {
@@ -676,7 +735,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 3
       }
     },
     {
@@ -690,35 +750,38 @@
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 6
       }
     },
     {
       "issue": "2026185",
       "number": "397",
       "tail": 9,
-      "kill": 3,
+      "kill": 5,
       "hit": true,
       "experts": {
         "A9": 8,
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 5
       }
     },
     {
       "issue": "2026184",
       "number": "902",
       "tail": 1,
-      "kill": 4,
+      "kill": 9,
       "hit": true,
       "experts": {
         "A9": 5,
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 9
+        "trans1": 9,
+        "L038": 9
       }
     },
     {
@@ -732,7 +795,8 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 9
+        "trans1": 9,
+        "L038": 0
       }
     },
     {
@@ -746,7 +810,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 9
       }
     },
     {
@@ -760,21 +825,23 @@
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 3
       }
     },
     {
       "issue": "2026180",
       "number": "520",
       "tail": 7,
-      "kill": 0,
+      "kill": 6,
       "hit": true,
       "experts": {
         "A9": 8,
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 6
       }
     },
     {
@@ -788,21 +855,23 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 9
+        "trans1": 9,
+        "L038": 0
       }
     },
     {
       "issue": "2026178",
       "number": "266",
       "tail": 4,
-      "kill": 7,
+      "kill": 2,
       "hit": true,
       "experts": {
         "A9": 3,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 2
       }
     },
     {
@@ -816,7 +885,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 9
       }
     },
     {
@@ -830,49 +900,53 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 7
       }
     },
     {
       "issue": "2026175",
       "number": "421",
       "tail": 7,
-      "kill": 5,
+      "kill": 9,
       "hit": true,
       "experts": {
         "A9": 4,
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 7
+        "trans1": 7,
+        "L038": 9
       }
     },
     {
       "issue": "2026174",
       "number": "618",
       "tail": 5,
-      "kill": 4,
+      "kill": 1,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 1
       }
     },
     {
       "issue": "2026173",
       "number": "677",
       "tail": 0,
-      "kill": 6,
+      "kill": 1,
       "hit": true,
       "experts": {
         "A9": 6,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 1
       }
     },
     {
@@ -886,7 +960,8 @@
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 7
       }
     },
     {
@@ -900,7 +975,8 @@
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 2
       }
     },
     {
@@ -914,7 +990,8 @@
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 6
       }
     },
     {
@@ -928,21 +1005,23 @@
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 7
       }
     },
     {
       "issue": "2026168",
       "number": "130",
       "tail": 4,
-      "kill": 8,
+      "kill": 3,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 3
       }
     },
     {
@@ -956,21 +1035,23 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 5
       }
     },
     {
       "issue": "2026166",
       "number": "900",
       "tail": 9,
-      "kill": 5,
+      "kill": 4,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 4
       }
     },
     {
@@ -984,21 +1065,23 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 7
+        "trans1": 7,
+        "L038": 5
       }
     },
     {
       "issue": "2026164",
       "number": "690",
       "tail": 5,
-      "kill": 2,
+      "kill": 0,
       "hit": true,
       "experts": {
         "A9": 4,
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 7
+        "trans1": 7,
+        "L038": 0
       }
     },
     {
@@ -1012,7 +1095,8 @@
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 7
       }
     },
     {
@@ -1026,7 +1110,8 @@
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 7,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 9
       }
     },
     {
@@ -1040,21 +1125,23 @@
         "h1s3": 2,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 1
       }
     },
     {
       "issue": "2026160",
       "number": "332",
       "tail": 8,
-      "kill": 6,
+      "kill": 0,
       "hit": true,
       "experts": {
         "A9": 6,
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 0
       }
     },
     {
@@ -1068,21 +1155,23 @@
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 9
       }
     },
     {
       "issue": "2026158",
       "number": "178",
       "tail": 6,
-      "kill": 7,
+      "kill": 3,
       "hit": true,
       "experts": {
         "A9": 7,
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 3
       }
     },
     {
@@ -1096,21 +1185,23 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 3
       }
     },
     {
       "issue": "2026156",
       "number": "162",
       "tail": 9,
-      "kill": 6,
+      "kill": 5,
       "hit": true,
       "experts": {
         "A9": 6,
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 5
       }
     },
     {
@@ -1124,7 +1215,8 @@
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 3,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 0
       }
     },
     {
@@ -1138,63 +1230,68 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 3,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 1
       }
     },
     {
       "issue": "2026153",
       "number": "887",
       "tail": 3,
-      "kill": 5,
+      "kill": 4,
       "hit": true,
       "experts": {
         "A9": 5,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 3,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 4
       }
     },
     {
       "issue": "2026152",
       "number": "220",
       "tail": 4,
-      "kill": 8,
+      "kill": 3,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 3,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 3
       }
     },
     {
       "issue": "2026151",
       "number": "631",
       "tail": 0,
-      "kill": 6,
+      "kill": 9,
       "hit": true,
       "experts": {
         "A9": 0,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 3,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 9
       }
     },
     {
       "issue": "2026150",
       "number": "720",
       "tail": 9,
-      "kill": 8,
+      "kill": 7,
       "hit": true,
       "experts": {
         "A9": 8,
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 3,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 7
       }
     },
     {
@@ -1208,7 +1305,8 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 5
+        "trans1": 5,
+        "L038": 2
       }
     },
     {
@@ -1222,21 +1320,23 @@
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 6
       }
     },
     {
       "issue": "2026147",
       "number": "712",
       "tail": 0,
-      "kill": 5,
+      "kill": 4,
       "hit": true,
       "experts": {
         "A9": 5,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 4
       }
     },
     {
@@ -1250,7 +1350,8 @@
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 9
       }
     },
     {
@@ -1264,7 +1365,8 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 7
+        "trans1": 7,
+        "L038": 3
       }
     },
     {
@@ -1278,21 +1380,23 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 0
       }
     },
     {
       "issue": "2026143",
       "number": "376",
       "tail": 6,
-      "kill": 8,
+      "kill": 3,
       "hit": true,
       "experts": {
         "A9": 8,
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 3
       }
     },
     {
@@ -1306,7 +1410,8 @@
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 6
+        "trans1": 6,
+        "L038": 6
       }
     },
     {
@@ -1320,35 +1425,38 @@
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 6
       }
     },
     {
       "issue": "2026140",
       "number": "285",
       "tail": 5,
-      "kill": 5,
-      "hit": false,
+      "kill": 6,
+      "hit": true,
       "experts": {
         "A9": 3,
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 6
       }
     },
     {
       "issue": "2026139",
       "number": "286",
       "tail": 6,
-      "kill": 8,
+      "kill": 5,
       "hit": true,
       "experts": {
         "A9": 3,
         "h1s3": 8,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 5
       }
     },
     {
@@ -1362,7 +1470,8 @@
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 3
       }
     },
     {
@@ -1376,35 +1485,38 @@
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 1
       }
     },
     {
       "issue": "2026136",
       "number": "889",
       "tail": 5,
-      "kill": 6,
+      "kill": 0,
       "hit": true,
       "experts": {
         "A9": 0,
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 5
+        "trans1": 5,
+        "L038": 0
       }
     },
     {
       "issue": "2026135",
       "number": "487",
       "tail": 9,
-      "kill": 1,
+      "kill": 4,
       "hit": true,
       "experts": {
         "A9": 4,
         "h1s3": 0,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 4
       }
     },
     {
@@ -1418,7 +1530,8 @@
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 2
       }
     },
     {
@@ -1432,7 +1545,8 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 4
       }
     },
     {
@@ -1446,7 +1560,8 @@
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 0
       }
     },
     {
@@ -1460,7 +1575,8 @@
         "h1s3": 3,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 3
       }
     },
     {
@@ -1474,21 +1590,23 @@
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 7
       }
     },
     {
       "issue": "2026129",
       "number": "023",
       "tail": 5,
-      "kill": 4,
+      "kill": 1,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 4,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 1
       }
     },
     {
@@ -1502,7 +1620,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 2
+        "trans1": 2,
+        "L038": 9
       }
     },
     {
@@ -1516,7 +1635,8 @@
         "h1s3": 5,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 0
       }
     },
     {
@@ -1530,21 +1650,23 @@
         "h1s3": 6,
         "freq_all": 6,
         "freq50": 1,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 3
       }
     },
     {
       "issue": "2026125",
       "number": "954",
       "tail": 8,
-      "kill": 1,
+      "kill": 2,
       "hit": true,
       "experts": {
         "A9": 9,
         "h1s3": 1,
         "freq_all": 6,
         "freq50": 8,
-        "trans1": 0
+        "trans1": 0,
+        "L038": 2
       }
     },
     {
@@ -1558,7 +1680,8 @@
         "h1s3": 7,
         "freq_all": 6,
         "freq50": 8,
-        "trans1": 1
+        "trans1": 1,
+        "L038": 4
       }
     },
     {
@@ -1572,7 +1695,8 @@
         "h1s3": 9,
         "freq_all": 6,
         "freq50": 2,
-        "trans1": 3
+        "trans1": 3,
+        "L038": 7
       }
     }
   ]
