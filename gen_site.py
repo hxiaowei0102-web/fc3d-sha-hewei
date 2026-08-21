@@ -102,15 +102,17 @@ def build_html(d):
         f'<tr style="color:#999"><td style="text-align:left" colspan="2">专家池平均（800 专家）</td>'
         f'<td>{s["pool_avg"]*100:.2f}%</td><td>—</td></tr></tbody></table>')
 
-    # ── 4. 最新 100 期明细（v2.0 表格，近→远）──
+    # ── 4. 最新 100 期明细（v2.0 表格，近→远，含和尾）──
     rows_html = ""
     for r in d['rows'][:100]:
+        tail = sum(int(c) for c in r['num']) % 10
         t3 = '·'.join(
             f'<b>{c}</b>' if i == 0 else str(c)
             for i, c in enumerate(r['top3'][:3]))
         rows_html += (
             f'<tr class="{"miss-row" if not r["hit"] else ""}">'
             f'<td class="iss">{r["issue"]}</td><td class="num">{r["num"]}</td>'
+            f'<td class="num" style="color:var(--green)">{tail}</td>'
             f'<td class="t3">{t3}</td>'
             f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
             f'<td>{"✅" if r["hit"] else "❌"}</td>'
@@ -151,7 +153,7 @@ def build_html(d):
 
 <div class="card">
   <b>最新 100 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
-  <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>票码Top3</th><th>杀</th><th>结果</th><th>首席专家</th></tr></thead>
+  <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀</th><th>结果</th><th>首席专家</th></tr></thead>
   <tbody>{rows_html}</tbody></table></div>
 </div>
 
