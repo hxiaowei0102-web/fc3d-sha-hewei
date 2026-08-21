@@ -51,6 +51,25 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 .miss-row td{background:#fef2f2}
 .footer{margin-top:16px;padding:12px;background:#fff;border-radius:12px;font-size:11px;color:#999;line-height:1.7}
 .footer b{color:#666}
+/* ── 手机端优化（2026-08-21）── */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-scroll table{min-width:580px}
+.dot-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.dot{width:16px;height:16px;border-radius:50%;font-size:9px;line-height:16px;text-align:center;color:#fff;flex:0 0 auto}
+.dot-ok{background:var(--green)}.dot-bad{background:var(--red)}
+.dot-row .dl{font-size:11px;color:#999;margin-left:2px}
+.pick-card{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pick-card .ball{width:64px;height:64px;font-size:34px}
+@media (max-width:480px){
+  body{padding:8px}
+  .card{padding:12px;border-radius:10px;margin-bottom:10px}
+  h1{font-size:17px}
+  .ball{width:68px;height:68px;font-size:36px}
+  table{font-size:12px}
+  th,td{padding:5px 3px}
+  .tbl-scroll table{min-width:560px}
+  td.fname{max-width:80px}
+}
 """
 
 
@@ -119,27 +138,12 @@ def build_html(d):
         f'<div class="stat-row"><span>投票参数</span><span>K={n["n_experts"]} · win={n["win"]}</span>'
         f'<span style="color:#999;font-size:12px">网格 {d["scan_count"]} 组合选优</span></div>')
 
-    # ── 2b. 杀2码专家卡（新）──
+    # ── 2b. 杀2码（下期杀2码 = 票数前2）──
     top2_next = n['top3_vote'][:2]          # 下期杀2码 = 票数前2
     balls2 = "".join(
-        f'<div style="display:inline-block;margin:0 8px"><div class="ball" style="width:56px;height:56px;font-size:30px">{c}</div>'
+        f'<div style="text-align:center;margin:0 6px"><div class="ball" style="width:56px;height:56px;font-size:30px">{c}</div>'
         f'<div class="ball-label">杀和尾 {c}</div></div>'
         for c in top2_next)
-    top2_card_html = f"""
-<div class="card">
-  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
-  <div class="ball-wrap">{balls2}</div>
-  <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
-  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
-    <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
-    <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
-  <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
-    <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
-    <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
-  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
-    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
-  <div class="warn" style="background:#eef7ee;border-color:#1a9e54;color:#1a6e3a">💡 杀2码 = 在杀1码基础上多杀1个，命中率98%+，但杀掉2个码后剩余8个和尾。</div>
-</div>"""
 
     # ── 3. 专家级回测（v2.0 表格样式，数据来自 leaderboard Top10）──
     lb_rows = ""
@@ -192,11 +196,25 @@ def build_html(d):
 
 <div class="card">
   <div class="issue">预测期号 <b>{n['target_issue']}</b> 期</div>
-  <div class="ball-wrap"><div><div class="ball">{n['kill']}</div><div class="ball-label">杀和尾 {n['kill']}</div></div></div>
+  <div class="pick-card">
+    <div style="text-align:center"><div class="ball">{n['kill']}</div><div class="ball-label">杀和尾 {n['kill']}（杀1码）</div></div>
+    {balls2}
+  </div>
   <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}</div>
 </div>
 
-{top2_card_html}
+<div class="card">
+  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
+  <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
+  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
+    <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
+    <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
+  <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
+    <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
+    <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
+  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
+    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
+</div>
 
 <div class="card">
   <b>本期专家投票</b> <span style="color:#999;font-size:12px">（{n['n_experts']} 位专家 · 权重=近 {n['win']} 期命中率）</span>
@@ -214,9 +232,10 @@ def build_html(d):
 </div>
 
 <div class="card">
-  <b>最新 500 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
-  <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>首席专家</th></tr></thead>
-  <tbody>{rows_html}</tbody></table></div>
+  <b>最新 500 期明细</b> <span style="color:#999;font-size:12px">（近 → 远 · 手机左右滑动看全）</span>
+  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span></div>
+  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>首席专家</th></tr></thead>
+  <tbody>{rows_html}</tbody></table></div></div>
 </div>
 
 <div class="footer">
