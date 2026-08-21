@@ -75,11 +75,40 @@ def build_html(d):
         experts_html = '<div style="color:#999;padding:8px">无专家数据</div>'
 
     # ── 2. 单杀命中率（v2.0 stat-row 样式，数据来自 v3.1 500期回测）──
+    # 补充: 单杀 Top2（杀2码）500期回测 —— 和尾 ∉ 票数前2
+    rows_all = d['rows']
+    top2_hits = 0
+    top2_cur_win = 0
+    top2_max_lose = 0
+    _cl = 0
+    for _r in rows_all:
+        _order = sorted(range(10), key=lambda x: -_r['votes'][x])
+        _tail = sum(int(c) for c in _r['num']) % 10
+        _ok = _tail not in set(_order[:2])
+        if _ok:
+            top2_hits += 1
+            _cl = 0
+        else:
+            _cl += 1
+            top2_max_lose = max(top2_max_lose, _cl)
+    # 当前连中（近期在上，从最新往回数）
+    for _r in rows_all:
+        _order = sorted(range(10), key=lambda x: -_r['votes'][x])
+        _tail = sum(int(c) for c in _r['num']) % 10
+        if _tail not in set(_order[:2]):
+            top2_cur_win += 1
+        else:
+            break
+    top2_rate = top2_hits / len(rows_all)
     stats_html = (
-        f'<div class="stat-row"><span>500期回测命中率</span>'
+        f'<div class="stat-row"><span>500期回测命中率（杀1码）</span>'
         f'<span class="pct">{s["rate"]*100:.2f}%</span>'
         f'<span style="color:#999;font-size:12px">基线{s["baseline"]*100:.0f}% ({s["rate"]-s["baseline"]:+.1%})</span>'
         f'<span style="color:#999;font-size:12px">{s["hit"]}/{s["total"]}</span></div>'
+        f'<div class="stat-row"><span>500期回测命中率（杀2码·Top2）</span>'
+        f'<span class="pct">{top2_rate*100:.2f}%</span>'
+        f'<span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>'
+        f'<span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>'
         f'<div class="stat-row"><span>当前连中</span><span class="pct">{s["cur_win"]} 期</span>'
         f'<span style="color:#999;font-size:12px">最大连中 {s["max_win"]} 期</span></div>'
         f'<div class="stat-row"><span>最大连错</span>'
@@ -102,20 +131,27 @@ def build_html(d):
         f'<tr style="color:#999"><td style="text-align:left" colspan="2">专家池平均（800 专家）</td>'
         f'<td>{s["pool_avg"]*100:.2f}%</td><td>—</td></tr></tbody></table>')
 
-    # ── 4. 最新 100 期明细（v2.0 表格，近→远，含和尾）──
+    # ── 4. 最新 100 期明细（v2.0 表格，近→远，含和尾+Top2）──
     rows_html = ""
     for r in d['rows'][:100]:
         tail = sum(int(c) for c in r['num']) % 10
+        # Top2 = 票数前2
+        order = sorted(range(10), key=lambda x: -r['votes'][x])
+        top2_codes = order[:2]
+        top2_ok = tail not in set(top2_codes)
         t3 = '·'.join(
             f'<b>{c}</b>' if i == 0 else str(c)
             for i, c in enumerate(r['top3'][:3]))
+        miss_cls = "miss-row" if (not r["hit"] or not top2_ok) else ""
         rows_html += (
-            f'<tr class="{"miss-row" if not r["hit"] else ""}">'
+            f'<tr class="{miss_cls}">'
             f'<td class="iss">{r["issue"]}</td><td class="num">{r["num"]}</td>'
             f'<td class="num" style="color:var(--green)">{tail}</td>'
             f'<td class="t3">{t3}</td>'
             f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
             f'<td>{"✅" if r["hit"] else "❌"}</td>'
+            f'<td class="{"hit" if top2_ok else "miss"}">{"✅" if top2_ok else "❌"}</td>'
+            f'<td class="t3">{top2_codes[0]}·{top2_codes[1]}</td>'
             f'<td class="fname" title="{esc(r["fname"])}">{esc(r["fname"])}</td></tr>')
 
     return f"""<!DOCTYPE html>
@@ -153,7 +189,7 @@ def build_html(d):
 
 <div class="card">
   <b>最新 100 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
-  <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀</th><th>结果</th><th>首席专家</th></tr></thead>
+  <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>首席专家</th></tr></thead>
   <tbody>{rows_html}</tbody></table></div>
 </div>
 
