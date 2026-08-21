@@ -13,6 +13,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_JSON = os.path.join(BASE_DIR, 'cache', 'result.json')
 OUT_HTML = os.path.join(BASE_DIR, '杀和尾v3.html')
+OUT_INDEX = os.path.join(BASE_DIR, 'index.html')   # Pages 根路径 = index.html（同步输出）
 
 # ── v2.0 原版 CSS（从 git 9b24fbe 提取，未改动）───────────────────────
 CSS_TEXT = """
@@ -239,9 +240,12 @@ def main():
     html = build_html(data)
     with open(OUT_HTML, 'w', encoding='utf-8') as f:
         f.write(html)
+    # Pages 根路径同步输出 index.html（避免手机访问根地址看到旧版）
+    with open(OUT_INDEX, 'w', encoding='utf-8') as f:
+        f.write(html)
     n = data['next']
     s = data['summary']
-    print(f"已生成固定网页: {OUT_HTML}")
+    print(f"已生成固定网页: {OUT_HTML} (+ {OUT_INDEX})")
     print(f"数据至 {data['data_info']['last']} 期 | 公式池 {data['pool_info']['pool_size_total']:,} | 专家池 {data['pool_info']['topk']}")
     print(f"机制: Hedge(K={n['n_experts']},win={n['win']}) | 回测 {s['hit']}/{s['total']} = {s['rate']*100:.2f}% (基线90%)")
     print(f"下一期 {n['target_issue']} 杀和尾 {n['kill']}")
