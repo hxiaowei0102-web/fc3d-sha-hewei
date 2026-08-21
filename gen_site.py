@@ -5,8 +5,8 @@
 读 cache/result.json, 输出一个完全自包含的单文件 HTML（纯静态渲染，非 JS 动态）。
 版式 100% 复刻 v2.0 时代 index.html（标题 Hedge 单杀、80px 大红球、白卡片、
 本期专家投票 / 单杀命中率 / 专家级回测 / 最新500期明细 四卡，浅色移动优先）。
-算法数据为当前 v3.1：3931万公式穷举 800 专家池（每日随最新500期重选），
-win/k 参数每日网格扫描自动选优，500期回测逐期真实（walk-forward）。
+算法数据为当前 v3.2 锁定模式：3931万公式穷举 800 专家池【永久固定】，
+win/k 参数【锁定】→ 每天发布的预测 = 开奖完回测表同一期数值（确定性，可对账）。
 """
 import json
 import os
@@ -71,30 +71,6 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
   .tbl-scroll table{min-width:560px}
   td.fname{max-width:80px}
 }
-/* ── v3.1 前瞻焦点重构（2026-08-21）── */
-.hero{background:linear-gradient(135deg,#e0453a,#c73a2f);color:#fff;border-radius:14px;padding:20px 16px;margin-bottom:12px;box-shadow:0 4px 14px rgba(224,69,58,.35);text-align:center}
-.hero .tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 12px;font-size:12px;margin-bottom:8px}
-.hero .big-issue{font-size:15px;opacity:.95}
-.hero .big-issue b{font-size:22px;color:#fff}
-.hero .big-ball{width:104px;height:104px;border-radius:50%;background:#fff;color:var(--red);font-size:56px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:14px auto;box-shadow:0 6px 18px rgba(0,0,0,.25)}
-.hero .big-label{font-size:13px;opacity:.95;margin-top:4px}
-.hero .hero-sub{font-size:12px;opacity:.8;margin-top:10px;line-height:1.6}
-.hero .hero-sub b{color:#fff}
-.hero2{display:flex;gap:8px;margin-top:12px;justify-content:center}
-.hero2 .h2ball{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.95);color:var(--red);font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.hero2 .h2label{font-size:11px;opacity:.9;margin-top:3px}
-.hero2>div{text-align:center}
-details.collapse{border-radius:10px;overflow:hidden}
-details.collapse>summary{cursor:pointer;padding:10px 14px;font-size:13px;color:#666;background:#fafbfc;user-select:none;list-style:none;display:flex;justify-content:space-between;align-items:center}
-details.collapse>summary::-webkit-details-marker{display:none}
-details.collapse>summary .arrow{transition:transform .2s;color:#bbb;font-size:11px}
-details.collapse[open]>summary .arrow{transform:rotate(180deg)}
-details.collapse[open]>summary{border-bottom:1px solid var(--line)}
-details.collapse>.inner{padding:12px}
-.collapse{margin-bottom:12px}
-.now-card{background:#fff8e6;border:1.5px solid #f0c36d;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#7a5a00;line-height:1.7}
-.now-card b{color:#a06a00}
-
 """
 
 
@@ -148,8 +124,8 @@ def ledger_rows_html(records, limit=100):
 
 
 def backtest_rows_html(d, limit=100):
-    """500期回测明细（walk-forward 逐期真实，近期在上）。
-    注：v3.1 专家池每日重选，本表为当日窗口下的回测（每天可能略有变化）。"""
+    """500期回测明细（锁定池逐期真实，walk-forward，与发布记录一致可对账）。
+    近期在上。列: 期号 / 号码 / 和尾 / 专家池平均命中 / 杀1码 / 对错 / 票码Top3 / 主投专家"""
     rows_html = ""
     for r in d['rows'][:limit]:
         cls = "miss-row" if not r['hit'] else ""
@@ -198,7 +174,24 @@ def build_html(d):
     ledger_rows = ledger_rows_html(ledger_records, limit=100)
     ledger_stat = ledger_stats(ledger_records)
 
-    # 500期回测明细（walk-forward 逐期真实）
+    # 本期已发布值（账本保护，开奖前发布的不可改）= 页面预测区主显示
+    # 算法新预测（K=600）仅作参考，自下一期起生效
+    pub = None
+    for r in ledger_records:
+        if r.get('issue') == str(n['target_issue']):
+            pub = r
+            break
+    show_kill = pub['kill'] if pub else n['kill']
+    show_top2 = pub.get('top2') or n['top3_vote'][:2]
+    trans_note = ""
+    if pub and pub.get('kill') != n['kill']:
+        trans_note = (
+            f'<div style="background:#fff8e6;border:1.5px solid #f0c36d;border-radius:8px;padding:8px 12px;'
+            f'margin-top:10px;font-size:12px;color:#7a5a00;line-height:1.6">'
+            f'ℹ️ 本期 {n["target_issue"]} 按已发布值显示（杀 {pub["kill"]}，{pub["published_at"][:16]} 发布）。'
+            f'专家池已优化为 K={n["n_experts"]}（4段滚动样本外最优），<b>自下期起以 K={n["n_experts"]} 为准</b>。</div>')
+
+    # 500期回测明细（锁定池逐期真实，与发布记录一致可对账）
     backtest_rows = backtest_rows_html(d, limit=100)
 
     # ── 1. 本期专家投票（v2.0 exp-row 样式，静态渲染，无展开明细）──
@@ -211,7 +204,7 @@ def build_html(d):
     if not experts_html:
         experts_html = '<div style="color:#999;padding:8px">无专家数据</div>'
 
-    # ── 2. 单杀命中率（v2.0 stat-row 样式，数据来自 v3.1 500期回测）──
+    # ── 2. 单杀命中率（v2.0 stat-row 样式，数据来自 v3.2 锁定池 500期回测）──
     # 补充: 单杀 Top2（杀2码）500期回测 —— 和尾 ∉ 票数前2
     rows_all = d['rows']
     top2_hits = 0
@@ -254,10 +247,10 @@ def build_html(d):
         f'<span class="miss" style="color:var(--red);font-weight:700">{s["max_lose"]} 期</span>'
         f'<span style="color:#999;font-size:12px">专家池均值 {s["pool_avg"]*100:.2f}%</span></div>'
         f'<div class="stat-row"><span>投票参数</span><span>K={n["n_experts"]} · win={n["win"]}</span>'
-        f'<span style="color:#999;font-size:12px">网格 {d["scan_count"]} 组合每日选优</span></div>')
+        f'<span style="color:#999;font-size:12px">参数已锁定 · 确定性</span></div>')
 
-    # ── 2b. 杀2码（下期杀2码 = 票数前2）──
-    top2_next = n['top3_vote'][:2]          # 下期杀2码 = 票数前2
+    # ── 2b. 杀2码（本期显示 = 账本已发布 Top2；无发布则用算法票数前2）──
+    top2_next = list(show_top2)[:2]
     balls2 = "".join(
         f'<div style="text-align:center;margin:0 6px"><div class="ball" style="width:56px;height:56px;font-size:30px">{c}</div>'
         f'<div class="ball-label">杀和尾 {c}</div></div>'
@@ -286,83 +279,69 @@ def build_html(d):
 <style>{CSS_TEXT}</style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v3.1</span></h1>
-<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 每日重选专家池</div>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v3.2</span></h1>
+<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（固定专家 · K={n['n_experts']}）</div>
 
-<!-- ═══ 下一期预测 = 页面唯一焦点（开奖前发布）═══ -->
-<div class="hero">
-  <div class="tag">🎯 下一期预测 · 开奖前发布</div>
-  <div class="big-issue">预测期号 <b>{n['target_issue']}</b> 期</div>
-  <div class="big-ball">{n['kill']}</div>
-  <div class="big-label">杀和尾 {n['kill']}（杀1码）</div>
-  <div class="hero2">
-    <div><div class="h2ball">{top2_next[0]}</div><div class="h2label">杀2码</div></div>
-    <div><div class="h2ball">{top2_next[1]}</div><div class="h2label">杀2码</div></div>
+<div class="card">
+  <div class="issue">预测期号 <b>{n['target_issue']}</b> 期</div>
+  <div class="pick-card">
+    <div style="text-align:center"><div class="ball">{show_kill}</div><div class="ball-label">杀和尾 {show_kill}（杀1码）</div></div>
+    {balls2}
   </div>
-  <div class="hero-sub">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 每日重选<br>算法回测 {s['rate']*100:.2f}%（500期 · 基线{s['baseline']*100:.0f}%）</div>
+  <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}（参数已锁定）</div>
+  {trans_note}
 </div>
 
-<div class="now-card">
-  ⏰ <b>本期杀 {n['kill']}</b>：下一期 {n['target_issue']} 的<b>和尾</b>若等于 {n['kill']} 即杀错，其余 9 个和尾都安全（杀1码）；杀2码 = 和尾不是 {top2_next[0]}、{top2_next[1]} 都安全。<br>
-  历史数据只是参考，真正的预测就是上方这个红球。
+<div class="card">
+  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
+  <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
+  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
+    <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
+    <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
+  <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
+    <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
+    <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
+  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
+    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
 </div>
 
-<!-- ═══ 历史数据（全部折叠，不影响前瞻焦点）═══ -->
-<details class="collapse" open>
-  <summary>📊 单杀命中率与投票参数 <span class="arrow">▼</span></summary>
-  <div class="inner">{stats_html}</div>
-</details>
+<div class="card">
+  <b>本期专家投票</b> <span style="color:#999;font-size:12px">（{n['n_experts']} 位专家 · 权重=近 {n['win']} 期命中率）</span>
+  <div class="tbl-wrap" style="max-height:45vh">{experts_html}</div>
+</div>
 
-<details class="collapse">
-  <summary>🧪 杀2码专家（Top2）统计 <span class="arrow">▼</span></summary>
-  <div class="inner">
-    <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
-    <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
-      <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
-      <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
-    <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
-      <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
-      <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
-    <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
-      <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
-  </div>
-</details>
+<div class="card">
+  <b>单杀命中率</b>
+  {stats_html}
+</div>
 
-<details class="collapse">
-  <summary>👨‍🔬 本期专家投票（Top{n['n_experts']}） <span class="arrow">▼</span></summary>
-  <div class="inner"><div class="tbl-wrap" style="max-height:45vh">{experts_html}</div></div>
-</details>
+<div class="card">
+  <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>
+  {exp_bt_html}
+</div>
 
-<details class="collapse">
-  <summary>🏆 专家级回测（500期 Top10） <span class="arrow">▼</span></summary>
-  <div class="inner">{exp_bt_html}</div>
-</details>
+<div class="card">
+  <b>最新 500 期回测表</b> <span style="color:#999;font-size:12px">锁定池逐期真实（walk-forward）· 近→远 · 与发布记录可对账</span>
+  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">专家池平均命中率</span></div>
+  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>专家均</th><th>杀1</th><th>对错</th><th>票码Top3</th><th>主投专家</th></tr></thead>
+  <tbody>{backtest_rows}</tbody></table></div></div>
+</div>
 
-<details class="collapse">
-  <summary>📜 最新 500 期回测表（walk-forward 逐期真实） <span class="arrow">▼</span></summary>
-  <div class="inner">
-    <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">专家池平均命中率</span></div>
-    <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>专家均</th><th>杀1</th><th>对错</th><th>票码Top3</th><th>主投专家</th></tr></thead>
-    <tbody>{backtest_rows}</tbody></table></div></div>
-  </div>
-</details>
-
-<details class="collapse">
-  <summary>📝 真实发布记录（逐期开奖前发布） <span class="arrow">▼</span></summary>
-  <div class="inner">
-    <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
-    <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
-    <tbody>{ledger_rows}</tbody></table></div></div>
-  </div>
-</details>
+<div class="card">
+  <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 近→远 · 手机左右滑动看全</span>
+  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
+  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
+  <tbody>{ledger_rows}</tbody></table></div></div>
+</div>
 
 <div class="footer">
   <b>说明</b><br>
   ① 杀和尾 = 预测杀掉 0-9 中一个数字，下期<b>和尾</b>不出现即命中，理论随机基线 <b>90%</b>。<br>
-  ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池（<b>每日随窗口重选</b>）；主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数 win={n['win']}/K={n['n_experts']} 经 {d['scan_count']} 组合网格扫描<b>每日自动选优</b>。<br>
-  ③ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错。<br>
-  ④ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
-  ⑤ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
+  ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池，<b>首次锁定后永久固定</b>；主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数 <b>win={n['win']}/K={n['n_experts']} 已锁定</b>，不再每日重选。<br>
+  ③ <b>确定性保证（v2.0 同款语义）</b>：专家池与参数永久固定 → 每天发布的预测 = 开奖完回测表同一期数值。上方【最新500期回测表】与【真实发布记录】可逐期对账：同一期杀码必然一致。<br>
+  ④ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错。<br>
+  ⑤ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
+  ⑥ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
 </div>
 </body>
 </html>
