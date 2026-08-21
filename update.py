@@ -194,15 +194,15 @@ def fetch_latest():
     return None
 
 
-# ─── 单杀引擎 (Hedge 6专家加权混合 v2.3) ─────────────────
+# ─── 单杀引擎 (Hedge 6专家加权混合 v2.4) ─────────────────
 WINDOW_W = 150    # Hedge权重评估窗口
 SMOOTH = 0.02     # 权重下限
-# v2.3: 网格扫描3轮选优 - 去A9(90.24%最弱) 加X2015(近期强) → 全量91.12%
-EXPERT_KEYS = ['h1s3', 'freq_all', 'trans1', 'L038', 'L-222', 'X2015']
+# v2.4: 网格扫描4轮选优(以近500最优为准) - 去freq_all 加LS212 → 近500=94.4%
+EXPERT_KEYS = ['h1s3', 'trans1', 'L038', 'L-222', 'X2015', 'LS212']
 EXPERT_LABELS = {
-    'h1s3': '公式(h1+span+3)', 'freq_all': '全史低频', 'trans1': '一阶转移表',
+    'h1s3': '公式(h1+span+3)', 'trans1': '一阶转移表',
     'L038': '公式(3*跨+8)', 'L-222': '公式(-2尾+2跨+2)',
-    'X2015': '公式(2尾+十+5)',
+    'X2015': '公式(2尾+十+5)', 'LS212': '公式(2十+跨+2)',
 }
 
 
@@ -226,23 +226,7 @@ def precompute_kills(tails):
         kills['L038'][i] = (3 * sp + 8) % 10      # 网格扫描: (0*尾+3*跨+8)%10
         kills['L-222'][i] = (-2 * r["tail"] + 2 * sp + 2) % 10  # 网格扫描: (-2*尾+2*跨+2)%10
         kills['X2015'][i] = (2 * r["tail"] + r["s"] + 5) % 10   # 网格扫描: (2*尾+十+5)%10
-
-    # 频率类 (全史低频)
-    for e, win in (('freq_all', 0),):
-        cnt = Counter()
-        for i in range(T + 1):
-            if i >= WARM:
-                if win == 0:
-                    cnt[ta[i - 1]] += 1
-                    tot = i - WARM
-                else:
-                    lo = max(WARM, i - win)
-                    cnt = Counter(ta[lo:i])
-                    tot = i - lo
-                if tot > 0:
-                    kills[e][i] = min(range(10), key=lambda t: cnt.get(t, 0))
-                else:
-                    kills[e][i] = h1s3(i)
+        kills['LS212'][i] = (2 * r["s"] + sp + 2) % 10  # 网格扫描: (2*十+跨+2)%10
 
     # trans1 一阶转移表 (滚动近300期)
     for i in range(WARM, T + 1):
@@ -356,7 +340,7 @@ def compute(tails, next_code=None):
             "updated": datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S"),
             "total": T, "latest_issue": tails[-1]["issue"],
             "latest_number": f"{tails[-1]['b']}{tails[-1]['s']}{tails[-1]['g']}",
-            "formula": "Hedge 6专家加权混合 (h1s3+全史频+转移表+3跨8+-2尾2跨2+2尾十5)",
+            "formula": "Hedge 6专家加权混合 (h1s3+转移表+3跨8+-2尾2跨2+2尾十5+2十跨2)",
             "window": WINDOW_W,
             "full_hit": round(full_hits / (T - WARM) * 100, 2),
             "full_base": round(full_base / (T - WARM) * 100, 2),
@@ -388,9 +372,9 @@ def compute(tails, next_code=None):
 def build_html(d):
     """内嵌数据的静态 HTML"""
     def expert_label(e):
-        return {'h1s3': '公式(h1+span+3)', 'freq_all': '全史低频', 'trans1': '一阶转移表',
+        return {'h1s3': '公式(h1+span+3)', 'trans1': '一阶转移表',
                 'L038': '公式(3*跨+8)', 'L-222': '公式(-2尾+2跨+2)',
-                'X2015': '公式(2尾+十+5)'}[e]
+                'X2015': '公式(2尾+十+5)', 'LS212': '公式(2十+跨+2)'}[e]
     # 每个专家的近100期回测明细 (details 已按 近→远 排列)
     def expert_detail_rows(e):
         rows = []
@@ -492,7 +476,7 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
 </style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.3</span></h1>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.4</span></h1>
 <div class="sub">更新于 {d['meta']['updated']} · 共 {d['meta']['total']} 期 · 最新 {d['meta']['latest_issue']} ({d['meta']['latest_number']})</div>
 <div class="card">
   <div class="issue">预测期号 <b>{d['prediction']['next_issue']}</b> 期</div>

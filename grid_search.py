@@ -180,6 +180,51 @@ def build_pool():
                         (lambda A, B, C, D: (lambda r, tails, i, ta:
                             (A * r["tail"] + B * r["b"] + C * r["s"] + D) % 10))(a, b, c, d)))
 
+    # ── 第四轮: 近500期优先, 新特征维度 ──
+    # 13. 百+十+跨三维族 (a*百 + b*十 + c*跨 + d) % 10
+    for a in range(0, 3):
+        for b in range(0, 3):
+            for c in range(0, 3):
+                for d in range(0, 10):
+                    if a == 0 and b == 0 and c == 0:
+                        continue
+                    name = f"B{a}{b}{c}{d}"
+                    desc = f"({a}*百+{b}*十+{c}*跨+{d})%10"
+                    pool.append((name, desc,
+                        (lambda A, B, C, D: (lambda r, tails, i, ta:
+                            (A * r["b"] + B * r["s"] + C * r["span"] + D) % 10))(a, b, c, d)))
+
+    # 14. 和值+跨度组合族 (a*sum + b*span + c) % 10
+    for a in range(1, 3):
+        for b in range(-2, 3):
+            for c in range(0, 10):
+                name = f"H{a}{b}{c}"
+                desc = f"({a}*和值+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["sum"] + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 15. 跨位差平方族 (a*bd² + b*sd² + c) % 10
+    for a in (1, 2):
+        for b in (1, 2):
+            for c in range(0, 10):
+                name = f"DD{a}{b}{c}"
+                desc = f"({a}*百十差²+{b}*十个差²+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["bd"] * r["bd"] + B * r["sd"] * r["sd"] + C) % 10))(a, b, c)))
+
+    # 16. 尾+个位差族 (a*尾 + b*(百-个) + c) % 10  (百-个 = span 若个最小)
+    for a in range(0, 3):
+        for c in range(0, 10):
+            if a == 0:
+                continue
+            name = f"T{a}{c}"
+            desc = f"({a}*尾+百个差+{c})%10"
+            pool.append((name, desc,
+                (lambda A, C: (lambda r, tails, i, ta:
+                    (A * r["tail"] + (r["b"] - r["g"]) + C) % 10))(a, c)))
+
     return pool
 
 
@@ -255,30 +300,29 @@ def run():
         all_stats.append((name, desc, stats))
     print(f"评估完成耗时: {time.time()-t2:.1f}s")
 
-    # 排名: 按 全量 > 近500 > 近200 > 近100 综合
+    # 排名: 以近500期最优为准 (用户指定), 全量>=90% 作为防过拟合约束
     def rank_key(x):
         s = x[2]
-        return (s["full"]["pct"], s["500"]["pct"], s["200"]["pct"], s["100"]["pct"])
+        return (s["500"]["pct"], s["200"]["pct"], s["100"]["pct"], s["full"]["pct"])
 
     all_stats.sort(key=rank_key, reverse=True)
 
     print("\n" + "=" * 75)
-    print("=== 公式池 TOP 20 (按全量命中率) ===")
-    print(f"{'排名':<4} {'公式':<10} {'说明':<24} {'近100':>7} {'近200':>7} {'近500':>7} {'全量':>7}")
+    print("=== 公式池 TOP 20 (按近500命中率) ===")
+    print(f"{'排名':<4} {'公式':<10} {'说明':<26} {'近100':>7} {'近200':>7} {'近500':>7} {'全量':>7}")
     for i, (name, desc, s) in enumerate(all_stats[:20], 1):
-        print(f"{i:<4} {name:<10} {desc:<24} {s['100']['pct']:>6}% {s['200']['pct']:>6}% {s['500']['pct']:>6}% {s['full']['pct']:>6}%")
+        print(f"{i:<4} {name:<10} {desc:<26} {s['100']['pct']:>6}% {s['200']['pct']:>6}% {s['500']['pct']:>6}% {s['full']['pct']:>6}%")
 
-    # 达标公式 (三窗同时满足)
-    print("\n=== 达标公式 (全量>=90.2% 且 近500>=92% 且 近100>=93%) ===")
+    # 达标公式: 近500优先, 全量>=90% 防过拟合
+    print("\n=== 达标公式 (近500>=93% 且 全量>=90% 且 近100>=93%) ===")
     qualified = [x for x in all_stats
-                 if x[2]["full"]["pct"] >= 90.2 and x[2]["500"]["pct"] >= 92.0 and x[2]["100"]["pct"] >= 93.0]
+                 if x[2]["500"]["pct"] >= 93.0 and x[2]["full"]["pct"] >= 90.0 and x[2]["100"]["pct"] >= 93.0]
     if not qualified:
-        print("  (无公式三窗全达标 — 说明单公式性能天花板已到)")
-        # 降级显示: 全量>=90.2 且 近500>=92
-        qualified = [x for x in all_stats if x[2]["full"]["pct"] >= 90.2 and x[2]["500"]["pct"] >= 92.0]
-        print(f"  (降级标准: 全量>=90.2% 且 近500>=92% → {len(qualified)} 个)")
+        print("  (无公式三窗全达标)")
+        qualified = [x for x in all_stats if x[2]["500"]["pct"] >= 92.0 and x[2]["full"]["pct"] >= 90.0]
+        print(f"  (降级标准: 近500>=92% 且 全量>=90% → {len(qualified)} 个)")
     for name, desc, s in qualified[:15]:
-        print(f"  {name:<10} {desc:<24} 近100={s['100']['pct']}% 近500={s['500']['pct']}% 全量={s['full']['pct']}%")
+        print(f"  {name:<10} {desc:<26} 近100={s['100']['pct']}% 近500={s['500']['pct']}% 全量={s['full']['pct']}%")
 
     # 输出到 JSON
     out = {"total": T, "pool_size": len(pool), "top20": [
