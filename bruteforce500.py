@@ -21,8 +21,8 @@ from formulas import (feat_list, formula_name, family_of, COEFFS, TRIPLE_COEFFS,
 
 CSV = 'fc3d-history.csv'
 WINDOW = 500          # 穷举评估窗口 = 最新500期
-TOPK = 400            # 专家池规模上限
-PFL = 57              # 每族限选上限（7族 × 57 = 399 ≈ TOPK；控制多样性）
+TOPK = 800            # 专家池规模上限（v3.1: 400→800, 支持更大K）
+PFL = 115             # 每族限选上限（7族 × 115 = 805 ≈ TOPK；控制多样性）
 POOL_TOTAL = 3840 + 729600 + 38577600   # 单+双+三特征公式总数 = 39,311,040（96特征）
 
 

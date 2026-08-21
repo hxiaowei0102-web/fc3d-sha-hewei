@@ -20,11 +20,11 @@ from engine import load_data, get_next_issue
 from formulas import feat_list, FEAT_VERSION, NF
 
 WINDOW = 500          # 回测窗口 / 穷举窗口
-WIN_GRID = (40, 60, 90, 120, 150, 180, 200, 240)   # 网格扫描（8×9=72组合）
-K_GRID = (6, 8, 10, 13, 16, 20, 24, 28, 32)
+WIN_GRID = (40, 50, 60, 70, 80, 90, 100, 120, 150, 180, 200, 240)   # 网格扫描（12×12=144组合）
+K_GRID = (16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60)  # 大K扩展
 SMOOTH = 0.02         # 权重下限
-TOPK = 400
-PFL = 57              # 每族限选上限（7族×57=399≈TOPK）
+TOPK = 800
+PFL = 115             # 每族限选上限（7族×115=805≈TOPK）
 BASELINE = 0.9        # 和尾杀1码随机基线
 WIN_MAX = max(WIN_GRID)   # 240：特征矩阵向历史方向扩展，保证回测首期也有满窗口
 CSV = 'fc3d-history.csv'
