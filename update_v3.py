@@ -89,7 +89,7 @@ def main():
     gen_site.main()
 
     print(f"\n完成 ✓  总耗时 {time.time()-t0:.1f} 秒")
-    print("本地预览: http://127.0.0.1:8000/杀和尾v3.html  (双击 HTML 文件亦可)")
+    print("本地预览: http://127.0.0.1:8000/index.html  (双击 HTML 文件亦可)")
 
 
 if __name__ == '__main__':
