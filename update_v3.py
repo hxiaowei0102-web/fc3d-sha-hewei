@@ -25,31 +25,6 @@ def current_fingerprint():
     return f"{len(issues)}_{issues[-1]}"
 
 
-LOCKED_PARAMS = {'win': 40, 'k': 56}   # v2.0 同款确定性：首次锁定后永久固定
-
-
-def _lock_pool_params():
-    """把 win/k 锁定参数写入 cache/pool.json 的 locked 字段。
-    之后：① 专家池永久固定不再重选  ② Hedge 参数固定不再网格扫描
-    → 每天发布的预测 = 开奖完回测表同一期数值（纯确定性函数）。
-    幂等：已锁定则跳过。
-    """
-    try:
-        p = 'cache/pool.json'
-        with open(p, 'r', encoding='utf-8') as f:
-            pj = json.load(f)
-        if pj.get('locked'):
-            return
-        pj['locked'] = dict(LOCKED_PARAMS)
-        pj['locked_at'] = datetime.now(BJT).strftime('%Y-%m-%d %H:%M:%S')
-        pj['lock_note'] = '确定性模式：专家池与win/k永久固定，发布值=回测值（v2.0同款语义）'
-        with open(p, 'w', encoding='utf-8') as f:
-            json.dump(pj, f, ensure_ascii=False)
-        print(f"  ★ 已锁定参数 win={LOCKED_PARAMS['win']} k={LOCKED_PARAMS['k']}（确定性模式）")
-    except Exception as e:
-        print(f"  ⚠ 锁定参数失败: {str(e)[:80]}")
-
-
 def main():
     t0 = time.time()
     ap = argparse.ArgumentParser(description='福彩3D 十位杀一码 一键更新')
@@ -82,38 +57,26 @@ def main():
         fp = fp2
         print(f"  数据已更新 → 指纹 {fp}")
 
-    # ---- [2/5] 专家池：锁定则直接复用（不再穷举重选）----
-    print("\n[2/5] 专家池（3931万公式已穷举锁定，固定800专家不再重选）")
+    # ---- [2/5] 暴力穷举（3931万×500期 → 专家池）----
+    print("\n[2/5] 暴力穷举（最新500期，3931万公式，按族限选 Top400 专家池）")
     from formulas import FEAT_VERSION, NF
     need_pool = True
     if os.path.exists('cache/pool.json') and not args.force:
         with open('cache/pool.json', 'r', encoding='utf-8') as f:
             pj = json.load(f)
-        if pj.get('locked'):
-            print(f"  ★ 专家池已锁定（确定性模式，固定 {len(pj.get('pool', []))} 专家）—— 跳过 3931 万穷举")
+        pfp = f"{pj['data_info']['n_issues']}_{pj['data_info']['last']}"
+        if pfp == fp and pj.get('feat_version') == FEAT_VERSION:
+            print(f"  缓存命中（指纹 {fp} v{FEAT_VERSION}），跳过穷举")
             need_pool = False
-        else:
-            pfp = f"{pj['data_info']['n_issues']}_{pj['data_info']['last']}"
-            if pfp == fp and pj.get('feat_version') == FEAT_VERSION:
-                print(f"  缓存命中（指纹 {fp} v{FEAT_VERSION}），跳过穷举")
-                need_pool = False
-            elif pfp == fp:
-                print(f"  特征体系已升级（{pj.get('feat_version')} → {FEAT_VERSION}），强制重算穷举")
+        elif pfp == fp:
+            print(f"  特征体系已升级（{pj.get('feat_version')} → {FEAT_VERSION}），强制重算穷举")
     if need_pool:
         import bruteforce500
         bruteforce500.main()
-        # 穷举/复用完成后锁定参数（win=40,k=56 → 与 v2.0 相同"发布=回测"确定性）
-        _lock_pool_params()
 
-    # ---- [3/5][4/5] 500期回测 + 下期预测（锁定参数跳过网格扫描）----
+    # ---- [3/5][4/5] 网格扫描 + 500期回测 + 下期预测 ----
     import hedge_core as _hc
-    if os.path.exists('cache/pool.json'):
-        with open('cache/pool.json', 'r', encoding='utf-8') as f:
-            _pj = json.load(f)
-        if _pj.get('locked'):
-            print(f"\n[3/5] 参数已锁定 win={_pj['locked']['win']} k={_pj['locked']['k']}（确定性模式，跳过网格扫描）")
-        else:
-            print(f"\n[3/5] 网格扫描（{len(_hc.WIN_GRID) * len(_hc.K_GRID)}组合 win×K 自动选优）")
+    print(f"\n[3/5] 网格扫描（{len(_hc.WIN_GRID) * len(_hc.K_GRID)}组合 win×K 自动选优）")
     print("[4/5] 500期 Hedge 逐期真实回测 + 下期预测")
     need_result = True
     if os.path.exists('cache/result.json') and not args.force:

@@ -6,16 +6,7 @@
   专家池 = 3931万公式在最新500期穷举选出的 TopK（按族限选，见 bruteforce500.py）
   目标 = 和尾 (b+s+g)%10
   每期预测：近 win 期专家命中率 = 权重(下限 SMOOTH) → 各专家对当期投票 → 票王 = 和尾杀码
-  参数 win/k 由 144 组合网格扫描在 500 期回测上自动选优（首次锁定后固定）。
-
-★ 确定性锁定模式（v3.2）★
-  与 v2.0 完全一致：每天发布的预测 = 开奖完回测表同一期数值。
-  机制：cache/pool.json 写入 locked = {"win": 40, "k": 56} 后——
-    ① 专家池【永久固定】（不再随最新500期窗口滑动重选）
-    ② win/k 参数【固定】（不再每日网格扫描重选）
-  于是第 i 期杀码 = 纯确定性函数 f(≤i-1期数据, 固定池, 固定参数)，
-  无论何时重算，同一期结果永远一致 → 发布值 = 回测值，可随时对账。
-
+  参数 win/k 由 72 组合网格扫描在 500 期回测上自动选优。
 walk-forward：第 t 期预测只用 t-1 / t-2 期数据算特征，严格不偷看未来。
 500 期回测 = 逐期真实预测记录（近期→远期输出）。
 """
@@ -224,19 +215,6 @@ def build_leaderboard(pool, hit, L0, N, best_win):
 
 # ---------------------------------------------------------------- 汇总
 
-def _resolve_params(pj):
-    """参数解析（锁定优先）：
-    pool.json 有 locked → 返回 (locked['win'], locked['k'], 'locked')
-    无 locked → 扫描优选出最佳，但会提示升级为锁定。
-    """
-    locked = pj.get('locked')
-    if locked:
-        win = int(locked['win'])
-        k = int(locked['k'])
-        return win, k, 'locked'
-    return None, None, 'unlocked'
-
-
 def main():
     t0 = time.time()
     issues, hh, tt, oo = load_data(CSV)
@@ -248,30 +226,19 @@ def main():
     pred, hit, L0, tt_arr = build_matrices(issues, hh, tt, oo, pool)
     print(f"矩阵构建完成 ({len(pool)}×{hit.shape[1]})，L0={L0}，用时 {time.time()-t0:.1f}s")
 
-    locked = pj.get('locked')
-    if locked:
-        # ★ 锁定模式：参数固定，跳过网格扫描 → 发布值=回测值
-        best_win, best_k = int(locked['win']), int(locked['k'])
-        scan = []
-        best = {'win': best_win, 'k': best_k, 'hits': None, 'total': WINDOW, 'rate': None,
-                'locked': True, 'note': '参数锁定(确定性模式)，不再每日重扫'}
-        print(f"★ 锁定模式: win={best_win}, k={best_k}（确定性：发布值=回测值，跳过网格扫描）")
-    else:
-        scan, best = grid_scan(hit, pred, tt_arr, L0)
-        print(f"网格扫描 {len(scan)} 组合 → 最优 win={best['win']}, k={best['k']}, 命中 {best['hits']}/{best['total']} = {best['rate']*100:.2f}%")
-        print("⚠ 未锁定参数：每天重扫 → 同期待开奖重算可能不一致。建议锁定参数(写 pool.json 的 locked 字段)实现确定性。")
-        best_win, best_k = best['win'], best['k']
+    scan, best = grid_scan(hit, pred, tt_arr, L0)
+    print(f"网格扫描 {len(scan)} 组合 → 最优 win={best['win']}, k={best['k']}, 命中 {best['hits']}/{best['total']} = {best['rate']*100:.2f}%")
 
     rows, summary = run_backtest(pool, pred, hit, L0, issues, hh, tt, oo,
-                                 best_win, best_k)
+                                 best['win'], best['k'])
     print(f"500期回测: 命中 {summary['hit']}/{summary['total']} = {summary['rate']*100:.2f}% "
           f"(基线 {BASELINE*100:.0f}%)  最大连错 {summary['max_lose']}")
 
     nxt = next_prediction(pool, pred, hit, L0, issues, hh, tt, oo, fixed_info,
-                          best_win, best_k)
-    print(f"下期 {nxt['target_issue']} 和尾杀码: {nxt['kill']}  (Top3票码 {nxt['top3_vote']})")
+                          best['win'], best['k'])
+    print(f"下期 {nxt['target_issue']} 十位杀码: {nxt['kill']}  (Top3票码 {nxt['top3_vote']})")
 
-    lb = build_leaderboard(pool, hit, L0, len(issues), best_win)
+    lb = build_leaderboard(pool, hit, L0, len(issues), best['win'])
 
     result = {
         'fingerprint': f"{len(issues)}_{issues[-1]}_{FEAT_VERSION}",
@@ -284,8 +251,8 @@ def main():
                       'n_features': pj.get('n_features', NF),
                       'feat_version': FEAT_VERSION,
                       'scan_seconds': pj['stats']['scan_seconds']},
-        'params': {'win': best_win, 'k': best_k, 'smooth': SMOOTH,
-                   'baseline': BASELINE, 'locked': bool(locked)},
+        'params': {'win': best['win'], 'k': best['k'], 'smooth': SMOOTH,
+                   'baseline': BASELINE},
         'scan': scan, 'best_scan': best,
         'next': nxt,
         'summary': summary,
