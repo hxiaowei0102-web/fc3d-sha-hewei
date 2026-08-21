@@ -197,6 +197,8 @@ def build_html(d):
   <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}</div>
 </div>
 
+{top2_card_html}
+
 <div class="card">
   <b>本期专家投票</b> <span style="color:#999;font-size:12px">（{n['n_experts']} 位专家 · 权重=近 {n['win']} 期命中率）</span>
   <div class="tbl-wrap" style="max-height:45vh">{experts_html}</div>
@@ -206,8 +208,6 @@ def build_html(d):
   <b>单杀命中率</b>
   {stats_html}
 </div>
-
-{top2_card_html}
 
 <div class="card">
   <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>
