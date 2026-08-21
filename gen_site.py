@@ -71,6 +71,30 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
   .tbl-scroll table{min-width:560px}
   td.fname{max-width:80px}
 }
+/* ── v3.2 前瞻焦点重构（2026-08-21）── */
+.hero{background:linear-gradient(135deg,#e0453a,#c73a2f);color:#fff;border-radius:14px;padding:20px 16px;margin-bottom:12px;box-shadow:0 4px 14px rgba(224,69,58,.35);text-align:center}
+.hero .tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 12px;font-size:12px;margin-bottom:8px}
+.hero .big-issue{font-size:15px;opacity:.95}
+.hero .big-issue b{font-size:22px;color:#fff}
+.hero .big-ball{width:104px;height:104px;border-radius:50%;background:#fff;color:var(--red);font-size:56px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:14px auto;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.hero .big-label{font-size:13px;opacity:.95;margin-top:4px}
+.hero .hero-sub{font-size:12px;opacity:.8;margin-top:10px;line-height:1.6}
+.hero .hero-sub b{color:#fff}
+.hero2{display:flex;gap:8px;margin-top:12px;justify-content:center}
+.hero2 .h2ball{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.95);color:var(--red);font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hero2 .h2label{font-size:11px;opacity:.9;margin-top:3px}
+.hero2>div{text-align:center}
+details.collapse{border-radius:10px;overflow:hidden}
+details.collapse>summary{cursor:pointer;padding:10px 14px;font-size:13px;color:#666;background:#fafbfc;user-select:none;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.collapse>summary::-webkit-details-marker{display:none}
+details.collapse>summary .arrow{transition:transform .2s;color:#bbb;font-size:11px}
+details.collapse[open]>summary .arrow{transform:rotate(180deg)}
+details.collapse[open]>summary{border-bottom:1px solid var(--line)}
+details.collapse>.inner{padding:12px}
+.collapse{margin-bottom:12px}
+.now-card{background:#fff8e6;border:1.5px solid #f0c36d;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#7a5a00;line-height:1.7}
+.now-card b{color:#a06a00}
+
 """
 
 
@@ -263,58 +287,74 @@ def build_html(d):
 </head>
 <body>
 <h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v3.2</span></h1>
-<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（锁定池 · 确定性）</div>
+<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 锁定池确定性模式</div>
 
-<div class="card">
-  <div class="issue">预测期号 <b>{n['target_issue']}</b> 期</div>
-  <div class="pick-card">
-    <div style="text-align:center"><div class="ball">{n['kill']}</div><div class="ball-label">杀和尾 {n['kill']}（杀1码）</div></div>
-    {balls2}
+<!-- ═══ 下一期预测 = 页面唯一焦点（开奖前发布）═══ -->
+<div class="hero">
+  <div class="tag">🎯 下一期预测 · 开奖前发布</div>
+  <div class="big-issue">预测期号 <b>{n['target_issue']}</b> 期</div>
+  <div class="big-ball">{n['kill']}</div>
+  <div class="big-label">杀和尾 {n['kill']}（杀1码）</div>
+  <div class="hero2">
+    <div><div class="h2ball">{top2_next[0]}</div><div class="h2label">杀2码</div></div>
+    <div><div class="h2ball">{top2_next[1]}</div><div class="h2label">杀2码</div></div>
   </div>
-  <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}（参数已锁定）</div>
+  <div class="hero-sub">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数锁定<br>算法回测 {s['rate']*100:.2f}%（500期 · 基线{s['baseline']*100:.0f}%）</div>
 </div>
 
-<div class="card">
-  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
-  <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
-  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
-    <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
-    <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
-  <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
-    <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
-    <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
-  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
-    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
+<div class="now-card">
+  ⏰ <b>本期杀 {n['kill']}</b>：下一期 {n['target_issue']} 的<b>和尾</b>若等于 {n['kill']} 即杀错，其余 9 个和尾都安全（杀1码）；杀2码 = 和尾不是 {top2_next[0]}、{top2_next[1]} 都安全。<br>
+  历史数据只是参考，真正的预测就是上方这个红球。
 </div>
 
-<div class="card">
-  <b>本期专家投票</b> <span style="color:#999;font-size:12px">（{n['n_experts']} 位专家 · 权重=近 {n['win']} 期命中率）</span>
-  <div class="tbl-wrap" style="max-height:45vh">{experts_html}</div>
-</div>
+<!-- ═══ 历史数据（全部折叠，不影响前瞻焦点）═══ -->
+<details class="collapse" open>
+  <summary>📊 单杀命中率与投票参数 <span class="arrow">▼</span></summary>
+  <div class="inner">{stats_html}</div>
+</details>
 
-<div class="card">
-  <b>单杀命中率</b>
-  {stats_html}
-</div>
+<details class="collapse">
+  <summary>🧪 杀2码专家（Top2）统计 <span class="arrow">▼</span></summary>
+  <div class="inner">
+    <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
+    <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
+      <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
+      <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
+    <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
+      <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
+      <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
+    <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
+      <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
+  </div>
+</details>
 
-<div class="card">
-  <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>
-  {exp_bt_html}
-</div>
+<details class="collapse">
+  <summary>👨‍🔬 本期专家投票（Top{n['n_experts']}） <span class="arrow">▼</span></summary>
+  <div class="inner"><div class="tbl-wrap" style="max-height:45vh">{experts_html}</div></div>
+</details>
 
-<div class="card">
-  <b>最新 500 期回测表</b> <span style="color:#999;font-size:12px">锁定池逐期真实（walk-forward）· 近→远 · 与发布记录可对账</span>
-  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">专家池平均命中率</span></div>
-  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>专家均</th><th>杀1</th><th>对错</th><th>票码Top3</th><th>主投专家</th></tr></thead>
-  <tbody>{backtest_rows}</tbody></table></div></div>
-</div>
+<details class="collapse">
+  <summary>🏆 专家级回测（500期 Top10） <span class="arrow">▼</span></summary>
+  <div class="inner">{exp_bt_html}</div>
+</details>
 
-<div class="card">
-  <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 近→远 · 手机左右滑动看全</span>
-  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
-  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
-  <tbody>{ledger_rows}</tbody></table></div></div>
-</div>
+<details class="collapse">
+  <summary>📜 最新 500 期回测表（锁定池逐期真实） <span class="arrow">▼</span></summary>
+  <div class="inner">
+    <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">专家池平均命中率</span></div>
+    <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>专家均</th><th>杀1</th><th>对错</th><th>票码Top3</th><th>主投专家</th></tr></thead>
+    <tbody>{backtest_rows}</tbody></table></div></div>
+  </div>
+</details>
+
+<details class="collapse">
+  <summary>📝 真实发布记录（逐期开奖前发布） <span class="arrow">▼</span></summary>
+  <div class="inner">
+    <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
+    <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
+    <tbody>{ledger_rows}</tbody></table></div></div>
+  </div>
+</details>
 
 <div class="footer">
   <b>说明</b><br>
