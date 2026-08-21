@@ -5,7 +5,8 @@
 读 cache/result.json, 输出一个完全自包含的单文件 HTML（纯静态渲染，非 JS 动态）。
 版式 100% 复刻 v2.0 时代 index.html（标题 Hedge 单杀、80px 大红球、白卡片、
 本期专家投票 / 单杀命中率 / 专家级回测 / 最新500期明细 四卡，浅色移动优先）。
-算法数据为当前 v3.1：3931万公式穷举 800 专家池，Hedge 加权投票。
+算法数据为当前 v3.2 锁定模式：3931万公式穷举 800 专家池【永久固定】，
+win/k 参数【锁定】→ 每天发布的预测 = 开奖完回测表同一期数值（确定性，可对账）。
 """
 import json
 import os
@@ -122,6 +123,29 @@ def ledger_rows_html(records, limit=100):
     return rows_html
 
 
+def backtest_rows_html(d, limit=100):
+    """500期回测明细（锁定池逐期真实，walk-forward，与发布记录一致可对账）。
+    近期在上。列: 期号 / 号码 / 和尾 / 专家池平均命中 / 杀1码 / 对错 / 票码Top3 / 主投专家"""
+    rows_html = ""
+    for r in d['rows'][:limit]:
+        cls = "miss-row" if not r['hit'] else ""
+        order = sorted(range(10), key=lambda x: -r['votes'][x])
+        tail = sum(int(c) for c in r['num']) % 10
+        top3 = "·".join(str(c) for c in order[:3])
+        fname = r.get('fname', '')
+        fam = r.get('fam', '')
+        rows_html += (
+            f'<tr class="{cls}"><td class="iss">{esc(r["issue"])}</td>'
+            f'<td class="num">{esc(r["num"])}</td>'
+            f'<td class="num" style="color:var(--green)">{tail}</td>'
+            f'<td class="t3">{r["rate"]*100:.1f}%</td>'
+            f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
+            f'<td>{"✅" if r["hit"] else "❌"}</td>'
+            f'<td class="t3">{top3}</td>'
+            f'<td class="fname">{esc(fname)}</td></tr>')
+    return rows_html
+
+
 def ledger_stats(records):
     """账本命中率统计（只看已开奖的）"""
     settled = [r for r in records if r.get('hit') is not None]
@@ -150,6 +174,9 @@ def build_html(d):
     ledger_rows = ledger_rows_html(ledger_records, limit=100)
     ledger_stat = ledger_stats(ledger_records)
 
+    # 500期回测明细（锁定池逐期真实，与发布记录一致可对账）
+    backtest_rows = backtest_rows_html(d, limit=100)
+
     # ── 1. 本期专家投票（v2.0 exp-row 样式，静态渲染，无展开明细）──
     experts_html = ""
     for i, e in enumerate(n['experts']):
@@ -160,7 +187,7 @@ def build_html(d):
     if not experts_html:
         experts_html = '<div style="color:#999;padding:8px">无专家数据</div>'
 
-    # ── 2. 单杀命中率（v2.0 stat-row 样式，数据来自 v3.1 500期回测）──
+    # ── 2. 单杀命中率（v2.0 stat-row 样式，数据来自 v3.2 锁定池 500期回测）──
     # 补充: 单杀 Top2（杀2码）500期回测 —— 和尾 ∉ 票数前2
     rows_all = d['rows']
     top2_hits = 0
@@ -203,7 +230,7 @@ def build_html(d):
         f'<span class="miss" style="color:var(--red);font-weight:700">{s["max_lose"]} 期</span>'
         f'<span style="color:#999;font-size:12px">专家池均值 {s["pool_avg"]*100:.2f}%</span></div>'
         f'<div class="stat-row"><span>投票参数</span><span>K={n["n_experts"]} · win={n["win"]}</span>'
-        f'<span style="color:#999;font-size:12px">网格 {d["scan_count"]} 组合选优</span></div>')
+        f'<span style="color:#999;font-size:12px">参数已锁定 · 确定性</span></div>')
 
     # ── 2b. 杀2码（下期杀2码 = 票数前2）──
     top2_next = n['top3_vote'][:2]          # 下期杀2码 = 票数前2
@@ -235,8 +262,8 @@ def build_html(d):
 <style>{CSS_TEXT}</style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.0</span></h1>
-<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.1（3931万公式穷举）</div>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v3.2</span></h1>
+<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（锁定池 · 确定性）</div>
 
 <div class="card">
   <div class="issue">预测期号 <b>{n['target_issue']}</b> 期</div>
@@ -244,7 +271,7 @@ def build_html(d):
     <div style="text-align:center"><div class="ball">{n['kill']}</div><div class="ball-label">杀和尾 {n['kill']}（杀1码）</div></div>
     {balls2}
   </div>
-  <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}</div>
+  <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}（参数已锁定）</div>
 </div>
 
 <div class="card">
@@ -276,6 +303,13 @@ def build_html(d):
 </div>
 
 <div class="card">
+  <b>最新 500 期回测表</b> <span style="color:#999;font-size:12px">锁定池逐期真实（walk-forward）· 近→远 · 与发布记录可对账</span>
+  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">专家池平均命中率</span></div>
+  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>专家均</th><th>杀1</th><th>对错</th><th>票码Top3</th><th>主投专家</th></tr></thead>
+  <tbody>{backtest_rows}</tbody></table></div></div>
+</div>
+
+<div class="card">
   <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 近→远 · 手机左右滑动看全</span>
   <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
   <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
@@ -285,10 +319,11 @@ def build_html(d):
 <div class="footer">
   <b>说明</b><br>
   ① 杀和尾 = 预测杀掉 0-9 中一个数字，下期<b>和尾</b>不出现即命中，理论随机基线 <b>90%</b>。<br>
-  ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池，主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数经 {d['scan_count']} 组合网格扫描自动选优。<br>
-  ③ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错。<br>
-  ④ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
-  ⑤ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
+  ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池，<b>首次锁定后永久固定</b>；主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数 <b>win={n['win']}/K={n['n_experts']} 已锁定</b>，不再每日重选。<br>
+  ③ <b>确定性保证（v2.0 同款语义）</b>：专家池与参数永久固定 → 每天发布的预测 = 开奖完回测表同一期数值。上方【最新500期回测表】与【真实发布记录】可逐期对账：同一期杀码必然一致。<br>
+  ④ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错。<br>
+  ⑤ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
+  ⑥ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
 </div>
 </body>
 </html>

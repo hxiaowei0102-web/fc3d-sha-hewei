@@ -43,7 +43,9 @@ def record_publication(nxt, data_last):
     issue = str(nxt['target_issue'])
     exists = [r for r in ledger['records'] if r['issue'] == issue]
     if exists:
-        return exists[0]  # 已有记录不覆盖（保护开奖前发布值）
+        e = exists[0]
+        print(f"[账本] {issue}期已有发布记录(杀{e['kill']})，保持开奖前发布值不变（去重保护）")
+        return e
     rec = {
         'issue': issue,
         'kill': nxt['kill'],

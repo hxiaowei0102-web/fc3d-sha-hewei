@@ -68,7 +68,7 @@ DATA_SOURCES = [
      'url': 'https://api.huiniao.top/interface/home/lotteryHistory?type=fcsd&page=1&limit=5',
      'parser': _parse_huiniao},
     {'name': '17500', 'kind': 'txt17500',
-     'url': 'http://www.17500.cn/getData/3d.TXT'},
+     'url': 'https://www.17500.cn/getData/3d.TXT'},
     {'name': 'apihz', 'kind': 'json',
      'url': 'https://cn.apihz.cn/api/caipiao/fucai3d.php?id=88888888&key=88888888',
      'parser': _parse_apihz},
