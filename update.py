@@ -194,15 +194,16 @@ def fetch_latest():
     return None
 
 
-# ─── 单杀引擎 (Hedge 6专家加权混合 v2.4) ─────────────────
+# ─── 单杀引擎 (Hedge 8专家加权混合 v2.5) ─────────────────
 WINDOW_W = 150    # Hedge权重评估窗口
 SMOOTH = 0.02     # 权重下限
-# v2.4: 网格扫描4轮选优(以近500最优为准) - 去freq_all 加LS212 → 近500=94.4%
-EXPERT_KEYS = ['h1s3', 'trans1', 'L038', 'L-222', 'X2015', 'LS212']
+# v2.5: 网格扫描5轮 - 加L035(3跨5)+V121(尾移+2跨1) 低相关增量 → 近500=95.6%
+EXPERT_KEYS = ['h1s3', 'trans1', 'L038', 'L-222', 'X2015', 'LS212', 'L035', 'V121']
 EXPERT_LABELS = {
     'h1s3': '公式(h1+span+3)', 'trans1': '一阶转移表',
     'L038': '公式(3*跨+8)', 'L-222': '公式(-2尾+2跨+2)',
     'X2015': '公式(2尾+十+5)', 'LS212': '公式(2十+跨+2)',
+    'L035': '公式(3*跨+5)', 'V121': '公式(尾移+2跨+1)',
 }
 
 
@@ -227,6 +228,9 @@ def precompute_kills(tails):
         kills['L-222'][i] = (-2 * r["tail"] + 2 * sp + 2) % 10  # 网格扫描: (-2*尾+2*跨+2)%10
         kills['X2015'][i] = (2 * r["tail"] + r["s"] + 5) % 10   # 网格扫描: (2*尾+十+5)%10
         kills['LS212'][i] = (2 * r["s"] + sp + 2) % 10  # 网格扫描: (2*十+跨+2)%10
+        kills['L035'][i] = (3 * sp + 5) % 10      # 网格扫描: (3*跨+5)%10
+        prev = tails[i - 2]["tail"] if i > WARM else r["tail"]
+        kills['V121'][i] = (1 * (r["tail"] - prev) + 2 * sp + 1) % 10  # 网格扫描: (尾移+2跨+1)%10
 
     # trans1 一阶转移表 (滚动近300期)
     for i in range(WARM, T + 1):
@@ -340,7 +344,7 @@ def compute(tails, next_code=None):
             "updated": datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S"),
             "total": T, "latest_issue": tails[-1]["issue"],
             "latest_number": f"{tails[-1]['b']}{tails[-1]['s']}{tails[-1]['g']}",
-            "formula": "Hedge 6专家加权混合 (h1s3+转移表+3跨8+-2尾2跨2+2尾十5+2十跨2)",
+            "formula": "Hedge 8专家加权混合 (h1s3+转移表+3跨8+-2尾2跨2+2尾十5+2十跨2+3跨5+尾移2跨1)",
             "window": WINDOW_W,
             "full_hit": round(full_hits / (T - WARM) * 100, 2),
             "full_base": round(full_base / (T - WARM) * 100, 2),
@@ -374,7 +378,8 @@ def build_html(d):
     def expert_label(e):
         return {'h1s3': '公式(h1+span+3)', 'trans1': '一阶转移表',
                 'L038': '公式(3*跨+8)', 'L-222': '公式(-2尾+2跨+2)',
-                'X2015': '公式(2尾+十+5)', 'LS212': '公式(2十+跨+2)'}[e]
+                'X2015': '公式(2尾+十+5)', 'LS212': '公式(2十+跨+2)',
+                'L035': '公式(3*跨+5)', 'V121': '公式(尾移+2跨+1)'}[e]
     # 每个专家的近100期回测明细 (details 已按 近→远 排列)
     def expert_detail_rows(e):
         rows = []
@@ -476,7 +481,7 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
 </style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.4</span></h1>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v2.5</span></h1>
 <div class="sub">更新于 {d['meta']['updated']} · 共 {d['meta']['total']} 期 · 最新 {d['meta']['latest_issue']} ({d['meta']['latest_number']})</div>
 <div class="card">
   <div class="issue">预测期号 <b>{d['prediction']['next_issue']}</b> 期</div>

@@ -225,6 +225,59 @@ def build_pool():
                 (lambda A, C: (lambda r, tails, i, ta:
                     (A * r["tail"] + (r["b"] - r["g"]) + C) % 10))(a, c)))
 
+    # ── 第五轮: 非线性交互与高阶特征 ──
+    # 17. 尾移动方向族 (本尾-上尾) + 跨度组合
+    for a in range(0, 3):
+        for b in range(0, 3):
+            for c in range(0, 10):
+                if a == 0 and b == 0:
+                    continue
+                name = f"V{a}{b}{c}"
+                desc = f"({a}*(尾-上尾)+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * (r["tail"] - ta[i-2]) + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 18. 奇偶分类族 (尾的奇偶性作为输入)
+    for a in (1, 2):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                name = f"O{a}{b}{c}"
+                desc = f"({a}*(尾%2)+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * (r["tail"] % 2) + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 19. 012路族 (尾 mod 3 作为输入)
+    for a in (1, 2):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                name = f"Z{a}{b}{c}"
+                desc = f"({a}*(尾%3)+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * (r["tail"] % 3) + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 20. 跨度+个位交叉族 (a*span + b*g + c) % 10
+    for a in range(1, 4):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                name = f"SG{a}{b}{c}"
+                desc = f"({a}*跨+{b}*个+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["span"] + B * r["g"] + C) % 10))(a, b, c)))
+
+    # 21. 跨度+百位交叉族 (a*span + b*b + c) % 10
+    for a in range(1, 4):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                name = f"SB{a}{b}{c}"
+                desc = f"({a}*跨+{b}*百+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["span"] + B * r["b"] + C) % 10))(a, b, c)))
+
     return pool
 
 
