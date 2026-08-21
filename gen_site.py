@@ -174,22 +174,21 @@ def build_html(d):
     ledger_rows = ledger_rows_html(ledger_records, limit=100)
     ledger_stat = ledger_stats(ledger_records)
 
-    # 本期已发布值（账本保护，开奖前发布的不可改）= 页面预测区主显示
-    # 算法新预测（K=600）仅作参考，自下一期起生效
+    # 本期已发布值（账本保护）仅用于过渡提示；卡片1 直接显示算法预测 Top3
     pub = None
     for r in ledger_records:
         if r.get('issue') == str(n['target_issue']):
             pub = r
             break
-    show_kill = pub['kill'] if pub else n['kill']
-    show_top2 = pub.get('top2') or n['top3_vote'][:2]
+    # 卡片1 = 直接显示算法预测票码 Top3（票数前三名）
+    show_top3 = list(n['top3_vote'][:3])   # 算法票王 + 票数第2/第3
     trans_note = ""
     if pub and pub.get('kill') != n['kill']:
         trans_note = (
             f'<div style="background:#fff8e6;border:1.5px solid #f0c36d;border-radius:8px;padding:8px 12px;'
             f'margin-top:10px;font-size:12px;color:#7a5a00;line-height:1.6">'
-            f'ℹ️ 本期 {n["target_issue"]} 按已发布值显示（杀 {pub["kill"]}，{pub["published_at"][:16]} 发布）。'
-            f'专家池已优化为 K={n["n_experts"]}（4段滚动样本外最优），<b>自下期起以 K={n["n_experts"]} 为准</b>。</div>')
+            f'ℹ️ 本期 {n["target_issue"]} 开奖前曾发布<b>杀 {pub["kill"]}</b>（K=56时代，见下方发布记录）；'
+            f'上方为 K={n["n_experts"]} 优化后的预测票码 Top3，<b>自下期起以 K={n["n_experts"]} 为准</b>。</div>')
 
     # 500期回测明细（锁定池逐期真实，与发布记录一致可对账）
     backtest_rows = backtest_rows_html(d, limit=100)
@@ -205,36 +204,36 @@ def build_html(d):
         experts_html = '<div style="color:#999;padding:8px">无专家数据</div>'
 
     # ── 2. 单杀命中率（v2.0 stat-row 样式，数据来自 v3.2 锁定池 500期回测）──
-    # 补充: 单杀 Top2（杀2码）500期回测 —— 和尾 ∉ 票数前2
+    # 补充: 预测票码 Top3（杀3码）500期回测 —— 和尾 ∉ 票数前3
     rows_all = d['rows']
-    top2_hits = 0
-    top2_cur_win = 0
-    top2_max_lose = 0
+    top3_hits = 0
+    top3_cur_win = 0
+    top3_max_lose = 0
     _cl = 0
     for _r in rows_all:
         _order = sorted(range(10), key=lambda x: -_r['votes'][x])
         _tail = sum(int(c) for c in _r['num']) % 10
-        _ok = _tail not in set(_order[:2])
+        _ok = _tail not in set(_order[:3])
         if _ok:
-            top2_hits += 1
+            top3_hits += 1
             _cl = 0
         else:
             _cl += 1
-            top2_max_lose = max(top2_max_lose, _cl)
+            top3_max_lose = max(top3_max_lose, _cl)
     # 当前连中（近期在上，从最新往回数）
     for _r in rows_all:
         _order = sorted(range(10), key=lambda x: -_r['votes'][x])
         _tail = sum(int(c) for c in _r['num']) % 10
-        if _tail not in set(_order[:2]):
-            top2_cur_win += 1
+        if _tail not in set(_order[:3]):
+            top3_cur_win += 1
         else:
             break
-    top2_rate = top2_hits / len(rows_all)
-    # 近100期杀2表现
+    top3_rate = top3_hits / len(rows_all)
+    # 近100期杀3表现
     _recent = d['rows'][:100]
-    top2_r100 = sum(
+    top3_r100 = sum(
         1 for _r in _recent
-        if (sum(int(c) for c in _r['num']) % 10) not in set(sorted(range(10), key=lambda x: -_r['votes'][x])[:2])
+        if (sum(int(c) for c in _r['num']) % 10) not in set(sorted(range(10), key=lambda x: -_r['votes'][x])[:3])
     )
     stats_html = (
         f'<div class="stat-row"><span>500期回测命中率（杀1码）</span>'
@@ -249,12 +248,12 @@ def build_html(d):
         f'<div class="stat-row"><span>投票参数</span><span>K={n["n_experts"]} · win={n["win"]}</span>'
         f'<span style="color:#999;font-size:12px">参数已锁定 · 确定性</span></div>')
 
-    # ── 2b. 杀2码（本期显示 = 账本已发布 Top2；无发布则用算法票数前2）──
-    top2_next = list(show_top2)[:2]
-    balls2 = "".join(
+    # ── 2b. 预测票码 Top3 三球（卡片1直接展示）──
+    top2_next = show_top3[1:]          # 第2、第3码
+    balls3 = "".join(
         f'<div style="text-align:center;margin:0 6px"><div class="ball" style="width:56px;height:56px;font-size:30px">{c}</div>'
-        f'<div class="ball-label">杀和尾 {c}</div></div>'
-        for c in top2_next)
+        f'<div class="ball-label">票码 {i+2}</div></div>'
+        for i, c in enumerate(top2_next))
 
     # ── 3. 专家级回测（v2.0 表格样式，数据来自 leaderboard Top10）──
     lb_rows = ""
@@ -285,24 +284,24 @@ def build_html(d):
 <div class="card">
   <div class="issue">预测期号 <b>{n['target_issue']}</b> 期</div>
   <div class="pick-card">
-    <div style="text-align:center"><div class="ball">{show_kill}</div><div class="ball-label">杀和尾 {show_kill}（杀1码）</div></div>
-    {balls2}
+    <div style="text-align:center"><div class="ball">{show_top3[0]}</div><div class="ball-label">杀和尾 {show_top3[0]}（票码1）</div></div>
+    {balls3}
   </div>
   <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}（参数已锁定）</div>
   {trans_note}
 </div>
 
 <div class="card">
-  <b>杀2码专家（Top2）</b> <span style="color:#999;font-size:12px">下期杀2个和尾，任一中即安全</span>
-  <div class="formula-info">下期 {n['target_issue']} 杀和尾 {top2_next[0]}、{top2_next[1]}（票数前2）</div>
-  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top2_rate*100:.2f}%</span>
-    <span style="color:#999;font-size:12px">基线80% ({top2_rate-0.8:+.1%})</span>
-    <span style="color:#999;font-size:12px">{top2_hits}/{len(rows_all)}</span></div>
-  <div class="stat-row"><span>近100期命中</span><span class="pct">{top2_r100/len(_recent)*100:.1f}%</span>
-    <span style="color:#999;font-size:12px">({top2_r100}/{len(_recent)})</span>
-    <span style="color:#999;font-size:12px">当前连中 {top2_cur_win} 期</span></div>
-  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top2_max_lose} 期</span>
-    <span style="color:#999;font-size:12px">满额：杀2码上限理论90%</span></div>
+  <b>预测票码 Top3 命中率</b> <span style="color:#999;font-size:12px">杀3码（和尾 ∉ Top3 即安全）</span>
+  <div class="formula-info">下期 {n['target_issue']} 预测票码：{'、'.join(str(c) for c in show_top3)}（票数前3）</div>
+  <div class="stat-row"><span>500期回测命中率</span><span class="pct">{top3_rate*100:.2f}%</span>
+    <span style="color:#999;font-size:12px">基线70% ({top3_rate-0.7:+.1%})</span>
+    <span style="color:#999;font-size:12px">{top3_hits}/{len(rows_all)}</span></div>
+  <div class="stat-row"><span>近100期命中</span><span class="pct">{top3_r100/len(_recent)*100:.1f}%</span>
+    <span style="color:#999;font-size:12px">({top3_r100}/{len(_recent)})</span>
+    <span style="color:#999;font-size:12px">当前连中 {top3_cur_win} 期</span></div>
+  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">{top3_max_lose} 期</span>
+    <span style="color:#999;font-size:12px">满额：杀3码上限理论70%</span></div>
 </div>
 
 <div class="card">
