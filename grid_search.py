@@ -39,36 +39,69 @@ def load_tails(path=CSV_PATH):
 
 
 def build_pool():
-    """构建公式池: 返回 [(name, 描述, kill_fn)]"""
+    """构建公式池 v2: 返回 [(name, 描述, kill_fn)]
+    规模: ~500+ 候选
+    1. 线性公式族: (a*尾 + b*跨 + c) % 10, a,b∈{-2..3}, c∈{0..9} → 6*6*10=360 (去常数)
+    2. 三维公式族: (a*尾 + b*跨 + c*个位 + d) % 10, a,b,c∈{0..3}, d∈{0..9} → 4*4*4*10=640 (抽样)
+    3. 乘积公式族: (a*尾*跨 + b*跨 + c) % 10, a∈{0..2}, b∈{0..3}, c∈{0..9}
+    4. 频率窗口族: 更多窗口
+    5. 转移表族: 阶数{1,2,3} × 窗口{100,200,300,500}
+    6. 跨位低频族
+    """
     pool = []
 
-    # 1. 线性公式族 (a*tail + b*span + c) % 10
-    for a in range(0, 4):
-        for b in range(0, 4):
+    # 1. 线性公式族 (含负数系数)
+    for a in range(-2, 4):
+        for b in range(-2, 4):
             for c in range(0, 10):
                 if a == 0 and b == 0:
-                    continue  # 常数公式无意义
+                    continue
                 name = f"L{a}{b}{c}"
                 desc = f"({a}*尾+{b}*跨+{c})%10"
                 pool.append((name, desc,
                     (lambda A, B, C: (lambda r, tails, i, ta: (A * r["tail"] + B * r["span"] + C) % 10))(a, b, c)))
 
-    # 2. 频率窗口族
-    for w in (20, 30, 40, 50, 60, 80, 100, 150, 200, 300, 500):
+    # 2. 三维公式族 (尾+跨+个位) — 抽样 a,b,c∈{0..3}
+    for a in range(0, 4):
+        for b in range(0, 4):
+            for c in range(0, 4):
+                for d in range(0, 10):
+                    if a == 0 and b == 0 and c == 0:
+                        continue
+                    name = f"3D{a}{b}{c}{d}"
+                    desc = f"({a}*尾+{b}*跨+{c}*个+{d})%10"
+                    pool.append((name, desc,
+                        (lambda A, B, C, D: (lambda r, tails, i, ta:
+                            (A * r["tail"] + B * r["span"] + C * r["g"] + D) % 10))(a, b, c, d)))
+
+    # 3. 乘积公式族
+    for a in range(0, 3):
+        for b in range(0, 4):
+            for c in range(0, 10):
+                if a == 0 and b == 0:
+                    continue
+                name = f"M{a}{b}{c}"
+                desc = f"({a}*尾*跨+{b}*跨+{c})%10"
+                pool.append((name, desc,
+                    (lambda A, B, C: (lambda r, tails, i, ta:
+                        (A * r["tail"] * r["span"] + B * r["span"] + C) % 10))(a, b, c)))
+
+    # 4. 频率窗口族 (更多窗口)
+    for w in (10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 100, 120, 150, 200, 250, 300, 400, 500):
         name = f"F{w}"
         desc = f"近{w}期最低频"
         pool.append((name, desc, (lambda W: (lambda r, tails, i, ta:
             min(range(10), key=lambda t: Counter(ta[max(WARM, i-W):i]).get(t, 0))))(w)))
 
-    # 3. 转移表族
-    for order in (1, 2):
-        for w in (100, 200, 300):
+    # 5. 转移表族 (含3阶, 更长窗口)
+    for order in (1, 2, 3):
+        for w in (100, 200, 300, 500):
             name = f"T{order}_{w}"
             desc = f"{order}阶转移表窗{w}"
             pool.append((name, desc, (lambda O, W: (lambda r, tails, i, ta:
                 _trans_kill(tails, ta, i, O, W)))(order, w)))
 
-    # 4. 跨位低频 (百/十/个各自历史最低频)
+    # 6. 跨位低频 (百/十/个各自历史最低频)
     for pos, pname in (('b', '百'), ('s', '十'), ('g', '个')):
         name = f"P{pos}"
         desc = f"{pname}位最低频"
@@ -79,16 +112,13 @@ def build_pool():
 
 
 def _trans_kill(tails, ta, i, order, win):
-    """转移表杀码: 用 (i-order)..(i-1) 历史转移"""
+    """转移表杀码: 用 (i-order)..(i-1) 历史转移 (通用多阶)"""
     lo = max(WARM, i - win)
     tab = defaultdict(lambda: [0.1] * 10)
     for j in range(lo + order, i):
         key = tuple(ta[j - k] for k in range(order, 0, -1))
         tab[key][ta[j]] += 1
-    if order == 1:
-        key = (ta[i - 1],)
-    else:
-        key = (ta[i - 2], ta[i - 1])
+    key = tuple(ta[i - k] for k in range(order, 0, -1))
     p = tab[key]
     return min(range(10), key=lambda t: p[t]) if sum(p) > 0 else -1  # -1 = 无历史, 用h1s3兜底
 
