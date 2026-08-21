@@ -41,11 +41,17 @@ def main():
 
     # ---- [1/5] 数据同步 ----
     print("\n[1/5] 同步最新数据（联网补抓 + CSV兜底）")
+    synced_ok = False
     try:
         import fetch
-        fetch.sync_data()
+        next_code, added = fetch.sync_data()
+        if added > 0:
+            print(f"  ✓ 已追加 {added} 期新数据")
+            synced_ok = True
     except Exception as e:
-        print(f"  ⚠ 数据同步异常，沿用现有CSV: {str(e)[:80]}")
+        print(f"  ⚠ 数据同步异常: {str(e)[:100]}")
+        print("  ⚠⚠ 若已抓到新开奖但写入失败，本次预测将基于旧数据 —— 终止更新避免发布错误预测")
+        sys.exit(1)
     fp2 = current_fingerprint()
     if fp2 != fp:
         fp = fp2

@@ -160,13 +160,20 @@ def append_to_csv(new_draws, local_last=None):
         print(f"  新增: {issue} = {b}{s}{g}")
     if added == 0 and not was_oos:
         return 0
-    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+    d = os.path.dirname(CSV_PATH)
+    if d:
+        os.makedirs(d, exist_ok=True)
     with open(CSV_PATH, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
         w.writerow(['issue', 'hundreds', 'tens', 'ones'])
         for iss in sorted(rows.keys()):
             b, s, g = rows[iss]
             w.writerow([iss, b, s, g])
+    # 写后强校验：确认新增期号真的落盘（防静默丢失，fail fast）
+    verify, _ = load_existing_rows()
+    missing = [iss for iss in rows if iss not in verify]
+    if missing:
+        raise IOError(f"CSV写入校验失败，缺失期号: {missing[:5]}...")
     return added
 
 
