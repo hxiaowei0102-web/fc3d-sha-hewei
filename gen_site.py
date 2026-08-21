@@ -226,29 +226,6 @@ def build_html(d):
         f'<tr style="color:#999"><td style="text-align:left" colspan="2">专家池平均（800 专家）</td>'
         f'<td>{s["pool_avg"]*100:.2f}%</td><td>—</td></tr></tbody></table>')
 
-    # ── 4. 最新 500 期明细（v2.0 表格，近→远，含和尾+Top2）──
-    rows_html = ""
-    for r in d['rows'][:500]:
-        tail = sum(int(c) for c in r['num']) % 10
-        # Top2 = 票数前2
-        order = sorted(range(10), key=lambda x: -r['votes'][x])
-        top2_codes = order[:2]
-        top2_ok = tail not in set(top2_codes)
-        t3 = '·'.join(
-            f'<b>{c}</b>' if i == 0 else str(c)
-            for i, c in enumerate(r['top3'][:3]))
-        miss_cls = "miss-row" if (not r["hit"] or not top2_ok) else ""
-        rows_html += (
-            f'<tr class="{miss_cls}">'
-            f'<td class="iss">{r["issue"]}</td><td class="num">{r["num"]}</td>'
-            f'<td class="num" style="color:var(--green)">{tail}</td>'
-            f'<td class="t3">{t3}</td>'
-            f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
-            f'<td>{"✅" if r["hit"] else "❌"}</td>'
-            f'<td class="{"hit" if top2_ok else "miss"}">{"✅" if top2_ok else "❌"}</td>'
-            f'<td class="t3">{top2_codes[0]}·{top2_codes[1]}</td>'
-            f'<td class="fname" title="{esc(r["fname"])}">{esc(r["fname"])}</td></tr>')
-
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -305,19 +282,12 @@ def build_html(d):
   <tbody>{ledger_rows}</tbody></table></div></div>
 </div>
 
-<div class="card">
-  <b>最新 500 期明细（回测重放）</b> <span style="color:#999;font-size:12px">近 → 远 · 手机左右滑动看全 · 非发布记录，仅供算法参考</span>
-  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span></div>
-  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>首席专家</th></tr></thead>
-  <tbody>{rows_html}</tbody></table></div></div>
-</div>
-
 <div class="footer">
   <b>说明</b><br>
   ① 杀和尾 = 预测杀掉 0-9 中一个数字，下期<b>和尾</b>不出现即命中，理论随机基线 <b>90%</b>。<br>
   ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池，主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数经 {d['scan_count']} 组合网格扫描自动选优。<br>
-  ③ 回测为<b>逐期真实预测记录</b>：第 t 期预测只用第 t-1、t-2 期数据（walk-forward，不偷看未来）。<br>
-  ④ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
+  ③ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错。<br>
+  ④ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
   ⑤ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
 </div>
 </body>
