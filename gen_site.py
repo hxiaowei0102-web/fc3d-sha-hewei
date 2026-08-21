@@ -4,7 +4,7 @@
 ==================================================================
 读 cache/result.json, 输出一个完全自包含的单文件 HTML（纯静态渲染，非 JS 动态）。
 版式 100% 复刻 v2.0 时代 index.html（标题 Hedge 单杀、80px 大红球、白卡片、
-本期专家投票 / 单杀命中率 / 专家级回测 / 最新100期明细 四卡，浅色移动优先）。
+本期专家投票 / 单杀命中率 / 专家级回测 / 最新500期明细 四卡，浅色移动优先）。
 算法数据为当前 v3.1：3931万公式穷举 800 专家池，Hedge 加权投票。
 """
 import json
@@ -155,9 +155,9 @@ def build_html(d):
         f'<tr style="color:#999"><td style="text-align:left" colspan="2">专家池平均（800 专家）</td>'
         f'<td>{s["pool_avg"]*100:.2f}%</td><td>—</td></tr></tbody></table>')
 
-    # ── 4. 最新 100 期明细（v2.0 表格，近→远，含和尾+Top2）──
+    # ── 4. 最新 500 期明细（v2.0 表格，近→远，含和尾+Top2）──
     rows_html = ""
-    for r in d['rows'][:100]:
+    for r in d['rows'][:500]:
         tail = sum(int(c) for c in r['num']) % 10
         # Top2 = 票数前2
         order = sorted(range(10), key=lambda x: -r['votes'][x])
@@ -214,7 +214,7 @@ def build_html(d):
 </div>
 
 <div class="card">
-  <b>最新 100 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
+  <b>最新 500 期明细</b> <span style="color:#999;font-size:12px">（近 → 远）</span>
   <div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>票码Top3</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>首席专家</th></tr></thead>
   <tbody>{rows_html}</tbody></table></div>
 </div>
