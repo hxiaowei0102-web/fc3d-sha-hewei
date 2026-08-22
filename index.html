@@ -78,14 +78,14 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 <div class="card">
   <b>预测票码 Top3 命中率</b> <span style="color:#999;font-size:12px">杀3码（和尾 ∉ Top3 即安全）</span>
   <div class="formula-info">下期 2026224 预测票码：3、7、1（票数前3）</div>
-  <div class="stat-row"><span>500期回测命中率</span><span class="pct">100.00%</span>
-    <span style="color:#999;font-size:12px">基线70% (+30.0%)</span>
-    <span style="color:#999;font-size:12px">500/500</span></div>
-  <div class="stat-row"><span>近100期命中</span><span class="pct">100.0%</span>
-    <span style="color:#999;font-size:12px">(100/100)</span>
-    <span style="color:#999;font-size:12px">当前连中 500 期</span></div>
-  <div class="stat-row"><span>最大连错</span><span class="miss" style="color:var(--red);font-weight:700">0 期</span>
-    <span style="color:#999;font-size:12px">满额：杀3码上限理论70%</span></div>
+  <div class="tbl-scroll"><div class="tbl-wrap"><table>
+    <thead><tr><th>口径</th><th>训练500期</th><th>基线</th><th>样本外2000期</th><th>基线</th></tr></thead>
+    <tbody>
+      <tr><td>票码1（杀1码）</td><td>100.00%</td><td>基线90%</td><td>91.05%</td><td>基线90%</td></tr><tr><td>票码2（杀2码）</td><td>100.00%</td><td>基线80%</td><td>81.70%</td><td>基线80%</td></tr><tr><td>票码3（杀3码）</td><td>100.00%</td><td>基线70%</td><td>71.60%</td><td>基线70%</td></tr>
+    </tbody></table></div></div>
+  <div class="stat-row"><span>近100期（训练窗尾段）</span>
+    <span class="pct">票1 100.0% · 票2 100.0% · 票3 100.0%</span></div>
+  <div style="background:#f2f9f2;border:1px solid #bfe3c4;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:12px;color:#1a6b35;line-height:1.6"><b>样本外验证</b>：训练窗口500期 100% 是<b>选择偏差</b>（专家池正是从这500期里挑的），不可作为未来预期；真实水平看样本外：样本外=2019144~2025074 共 2000 期（专家从未见过的历史数据，真实预期）。<br>票码1 <b>91.05%</b>（基线90%）、票码2 <b>81.70%</b>（基线80%）、票码3 <b>71.60%</b>（基线70%）——贴近随机基线，无稳定超额。</div>
 </div>
 
 <div class="card">

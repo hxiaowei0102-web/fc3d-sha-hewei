@@ -1,0 +1,96 @@
+{
+  "params": {
+    "win": 40,
+    "k": 600,
+    "n_experts": 800,
+    "locked": {
+      "win": 40,
+      "k": 600
+    }
+  },
+  "data": {
+    "n_issues": 8731,
+    "first": "2002001",
+    "last": "2026223"
+  },
+  "train_window": {
+    "kill": {
+      "n": 500,
+      "hit": 500,
+      "rate": 100.0,
+      "cur_win": 500,
+      "max_lose": 0,
+      "base": 90
+    },
+    "top2": {
+      "n": 500,
+      "hit": 500,
+      "rate": 100.0,
+      "cur_win": 500,
+      "max_lose": 0,
+      "base": 80
+    },
+    "top3": {
+      "n": 500,
+      "hit": 500,
+      "rate": 100.0,
+      "cur_win": 500,
+      "max_lose": 0,
+      "base": 70
+    }
+  },
+  "oos_window": {
+    "kill": {
+      "n": 2000,
+      "hit": 1821,
+      "rate": 91.05,
+      "cur_win": 2,
+      "max_lose": 3
+    },
+    "top2": {
+      "n": 2000,
+      "hit": 1634,
+      "rate": 81.7,
+      "cur_win": 2,
+      "max_lose": 5
+    },
+    "top3": {
+      "n": 2000,
+      "hit": 1432,
+      "rate": 71.6,
+      "cur_win": 2,
+      "max_lose": 5
+    }
+  },
+  "oos_segments": [
+    {
+      "first": "2019144",
+      "last": "2020292",
+      "kill": 90.0,
+      "top2": 80.4,
+      "top3": 69.4
+    },
+    {
+      "first": "2020293",
+      "last": "2022128",
+      "kill": 88.8,
+      "top2": 80.6,
+      "top3": 71.2
+    },
+    {
+      "first": "2022129",
+      "last": "2023277",
+      "kill": 93.2,
+      "top2": 83.2,
+      "top3": 73.0
+    },
+    {
+      "first": "2023278",
+      "last": "2025074",
+      "kill": 92.2,
+      "top2": 82.6,
+      "top3": 72.8
+    }
+  ],
+  "note": "train=选择偏差(专家被选出的同段数据)，oos=专家未见过的更早2000期(真实预期)"
+}
