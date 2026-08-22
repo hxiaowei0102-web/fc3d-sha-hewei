@@ -46,7 +46,6 @@ td.num{font-weight:700;letter-spacing:1px}
 td.t3{font-size:11px;color:#999;font-family:ui-monospace,Consolas,monospace}
 td.t3 b{color:var(--red)}
 td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.miss-row td{background:#fef2f2}
 /* ── 手机端优化（2026-08-21）── */
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tbl-scroll table{min-width:580px}
@@ -123,16 +122,15 @@ def build_html(d):
     for r in d['rows'][:1000]:
         tail = sum(int(c) for c in r['num']) % 10
         top3 = r['top3']
-        # 杀1/杀2/杀3 三列独立上色：命中绿、未命中红（多错用颜色区分）
-        def _cell(code, hit_ok):
-            cls = "hit" if hit_ok else "miss"
-            return f'<td class="{cls}" style="font-weight:700">{code}</td>'
-        cells = "".join(
-            _cell(top3[i], tail not in set(top3[:i+1])) for i in range(3))
-        # 整行红底：杀1错（最核心）
-        row_cls = "miss-row" if tail in set(top3[:1]) else ""
+        # 只把杀错的那一格数字变红：每格独立判断，和尾恰好=该数字才标红；
+        # 和尾=杀2 只红杀2格，杀1格不受影响（不做累积判断）
+        def _cell(code):
+            if code == tail:
+                return f'<td class="miss" style="font-weight:700">{code}</td>'
+            return f'<td style="font-weight:700">{code}</td>'
+        cells = "".join(_cell(top3[i]) for i in range(3))
         bt_rows_html += (
-            f'<tr class="{row_cls}"><td class="iss">{esc(r["issue"])}</td>'
+            f'<tr><td class="iss">{esc(r["issue"])}</td>'
             f'<td class="num">{r["num"]}</td>'
             f'<td class="num" style="color:var(--green)">{tail}</td>'
             f'{cells}</tr>')
@@ -144,8 +142,7 @@ def build_html(d):
         f'<div class="stat-row"><span>杀1命中（1000期）</span>'
         f'<span class="pct">{bt_hits}/{bt_total} = {bt_hits/bt_total*100:.2f}%</span></div>'
         f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
-        f'<span class="hit">🟢 绿=杀对</span> &nbsp; <span class="miss">🔴 红=杀错</span>'
-        f'&nbsp; 整行红底=杀1错；杀2/杀3错仅该格变红，错得越多红格越多。</div>'
+        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。</div>'
         f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
         f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
         f'<tbody>{bt_rows_html}</tbody></table></div></div>'
