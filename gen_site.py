@@ -48,15 +48,9 @@ td.t3{font-size:11px;color:#999;font-family:ui-monospace,Consolas,monospace}
 td.t3 b{color:var(--red)}
 td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .miss-row td{background:#fef2f2}
-.footer{margin-top:16px;padding:12px;background:#fff;border-radius:12px;font-size:11px;color:#999;line-height:1.7}
-.footer b{color:#666}
 /* ── 手机端优化（2026-08-21）── */
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tbl-scroll table{min-width:580px}
-.dot-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;align-items:center}
-.dot{width:16px;height:16px;border-radius:50%;font-size:9px;line-height:16px;text-align:center;color:#fff;flex:0 0 auto}
-.dot-ok{background:var(--green)}.dot-bad{background:var(--red)}
-.dot-row .dl{font-size:11px;color:#999;margin-left:2px}
 .pick-card{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
 .pick-card .ball{width:64px;height:64px;font-size:34px}
 @media (max-width:480px){
@@ -79,96 +73,14 @@ def esc(s):
     return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
-def load_ledger():
-    """读取发布账本（逐期真实预测记录）。失败返回空列表。"""
-    try:
-        import json as _json
-        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache', 'predictions.json')
-        with open(p, 'r', encoding='utf-8') as f:
-            return _json.load(f).get('records', [])
-    except Exception:
-        return []
-
-
-def ledger_rows_html(records, limit=100):
-    """账本渲染：逐期真实发布记录（近→远）。含发布时刻列。"""
-    rows_html = ""
-    for r in records[:limit]:
-        hit = r.get('hit')
-        kill = r.get('kill')
-        tail = r.get('tail')
-        if tail is None or hit is None:
-            # 未开奖：显示"待开奖"
-            cls = ""
-            rows_html += (
-                f'<tr><td class="iss">{esc(r.get("issue",""))}</td>'
-                f'<td class="num">—</td><td class="num">—</td>'
-                f'<td class="t3">—</td>'
-                f'<td class="num">{kill}</td>'
-                f'<td style="color:#bbb">⏳</td>'
-                f'<td class="t3">{esc("·".join(str(x) for x in r.get("top2", [])))}</td>'
-                f'<td class="t3">{esc(r.get("published_at","")[:16])}</td></tr>')
-        else:
-            cls = "miss-row" if not hit else ""
-            ok2 = tail not in set(r.get("top2", []))
-            rows_html += (
-                f'<tr class="{cls}"><td class="iss">{esc(r.get("issue",""))}</td>'
-                f'<td class="num">{esc(r.get("num",""))}</td>'
-                f'<td class="num" style="color:var(--green)">{tail}</td>'
-                f'<td class="t3">—</td>'
-                f'<td class="{"hit" if hit else "miss"}">{kill}</td>'
-                f'<td>{"✅" if hit else "❌"}</td>'
-                f'<td class="{"hit" if ok2 else "miss"}">{"✅" if ok2 else "❌"}</td>'
-                f'<td class="t3">{esc("·".join(str(x) for x in r.get("top2", [])))}</td>'
-                f'<td class="t3">{esc(r.get("published_at","")[:16])}</td></tr>')
-    return rows_html
-
-
-def ledger_stats(records):
-    """账本命中率统计（只看已开奖的）"""
-    settled = [r for r in records if r.get('hit') is not None]
-    if not settled:
-        return None
-    hits = sum(1 for r in settled if r['hit'])
-    top2_hits = sum(1 for r in settled if r.get('tail') not in set(r.get('top2', [])))
-    cur = 0
-    for r in settled:  # records 近→远
-        if r['hit']:
-            cur += 1
-        else:
-            break
-    return {'total': len(settled), 'hits': hits, 'rate': hits / len(settled),
-            'top2_rate': top2_hits / len(settled), 'cur_win': cur}
-
-
 def build_html(d):
     n = d['next']
     s = d['summary']
     di = d['data_info']
     pi = d['pool_info']
 
-    # 真实发布记录（账本）
-    ledger_records = load_ledger()
-    ledger_rows = ledger_rows_html(ledger_records, limit=100)
-    ledger_stat = ledger_stats(ledger_records)
-
-    # 本期已发布值（账本保护）仅用于过渡提示；卡片1 直接显示算法预测 Top3
-    pub = None
-    for r in ledger_records:
-        if r.get('issue') == str(n['target_issue']):
-            pub = r
-            break
     # 卡片1 = 直接显示算法预测票码 Top3（票数前三名）
     show_top3 = list(n['top3_vote'][:3])   # 算法票王 + 票数第2/第3
-    trans_note = ""
-    if pub and pub.get('kill') != n['kill']:
-        trans_note = (
-            f'<div style="background:#fff8e6;border:1.5px solid #f0c36d;border-radius:8px;padding:8px 12px;'
-            f'margin-top:10px;font-size:12px;color:#7a5a00;line-height:1.6">'
-            f'ℹ️ 本期 {n["target_issue"]} 开奖前曾发布<b>杀 {pub["kill"]}</b>（K=56时代，见下方发布记录）；'
-            f'上方为 K={n["n_experts"]} 优化后的预测票码 Top3，<b>自下期起以 K={n["n_experts"]} 为准</b>。</div>')
-
-    # 500期回测明细已移除（老板要求只保留实战口径：真实发布记录）
 
     # ── 2. 三口径命中率对照（训练窗口 vs 样本外）──
     # 训练窗口（500期，result.json 逐期真实）：专家被选出的同段数据 → 选择偏差，仅供对账
@@ -292,7 +204,7 @@ def build_html(d):
 <div class="card">
   <div class="issue-flex"><span class="issue-pre">预测期号</span><b style="font-size:32px;letter-spacing:1px">{n['target_issue']}</b><span class="issue-post">期</span></div>
   <div class="pick-card" style="gap:8px;margin-top:14px">{ball3_html}</div>
-  <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数=600专家加权合计</div>
+  <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数={n['n_experts']}专家加权合计</div>
 </div>
 
 {hedge_card_html}
@@ -313,24 +225,6 @@ def build_html(d):
 <div class="card">
   <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>
   {exp_bt_html}
-</div>
-
-<div class="card">
-  <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 开奖后自动验证 · 近→远 · 手机左右滑动看全</span>
-  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
-  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
-  <tbody>{ledger_rows}</tbody></table></div></div>
-</div>
-
-<div class="footer">
-  <b>说明</b><br>
-  ① 杀和尾 = 预测杀掉 0-9 中一个数字，下期<b>和尾</b>不出现即命中，理论随机基线 <b>90%</b>。<br>
-  ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池，<b>首次锁定后永久固定</b>；主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数 <b>win={n['win']}/K={n['n_experts']} 已锁定</b>，不再每日重选。<br>
-  ③ <b>确定性保证（v2.0 同款语义）</b>：专家池与参数永久固定 → 每天发布的预测 = 开奖后验证的记录，发布值可随时对账（发布时存档、开奖后补标对错）。<br>
-  ④ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错，是<b>唯一实战口径</b>。<br>
-  ⑤ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
-  ⑥ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
-  {trans_note}
 </div>
 </body>
 </html>
