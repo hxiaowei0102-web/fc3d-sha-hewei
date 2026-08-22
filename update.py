@@ -521,6 +521,12 @@ thead th{{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-i
 
 # ─── Main ──────────────────────────────────────────────
 if __name__ == "__main__":
+    print("⛔ update.py 已停用（v2.5 单杀引擎，2026-08-22 起不再生产预测）")
+    print("   当前生产引擎为 update_v3.py（v3 双系统：800专家 A + 5专家 B）")
+    print("   请运行: python update_v3.py")
+    print("   本文件仅保留供 audit.py / health.py 导入数据抓取函数。")
+    sys.exit(0)
+    # ── 以下为 v2.5 旧逻辑，不再执行 ──
     print(f"🕐 {datetime.now(TZ).strftime('%Y-%m-%d %H:%M:%S')} 杀和尾单杀更新")
     # 0. 双向同步: 先拉取云端最新数据(兼容本地/云端统一更新)
     try:
