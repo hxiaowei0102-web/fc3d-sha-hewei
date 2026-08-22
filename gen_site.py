@@ -216,14 +216,13 @@ def build_html(d):
     except Exception:
         oos, oos_ok = None, False
 
-    # ── 2b. 预测票码 Top3 三球（卡片1：期号 + 三球均分 + 得票数 + 标签）──
+    # ── 2b. 预测票码 Top3 三球（卡片1：期号 + 三球均分 + 得票数，无标签）──
     _vote_dist = n.get('top3_vote_dist', [0]*10)
     ball3_html = "".join(
         f'<div style="flex:1;text-align:center;min-width:0;padding:0 4px">'
         f'<div class="ball">{c}</div>'
-        f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div>'
-        f'<div class="ball-label">{"杀和尾 " + str(c) if i == 0 else "票码 " + str(c)}</div></div>'
-        for i, c in enumerate(show_top3[:3]))
+        f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div></div>'
+        for c in show_top3[:3])
 
     # 三口径对照行（训练 vs 样本外）
     def _rate_tr(sel):
