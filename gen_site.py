@@ -205,12 +205,12 @@ def build_html(d):
     except Exception:
         oos, oos_ok = None, False
 
-    # ── 2b. 预测票码 Top3 三球（卡片1直接展示）──
-    top2_next = show_top3[1:]          # 第2、第3码
-    balls3 = "".join(
-        f'<div style="text-align:center;margin:0 6px"><div class="ball" style="width:56px;height:56px;font-size:30px">{c}</div>'
-        f'<div class="ball-label">票码 {i+2}</div></div>'
-        for i, c in enumerate(top2_next))
+    # ── 2b. 预测票码 Top3 三球（卡片1：三球等宽平均分配，无杂项）──
+    ball3_html = "".join(
+        f'<div style="flex:1;text-align:center;min-width:0">'
+        f'<div class="ball">{c}</div>'
+        f'<div class="ball-label">{"杀和尾 " + str(c) if i == 0 else "票码 " + str(c)}</div></div>'
+        for i, c in enumerate(show_top3[:3]))
 
     # 三口径对照行（训练 vs 样本外）
     def _rate_tr(sel):
@@ -269,13 +269,8 @@ def build_html(d):
 <div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（固定专家 · K={n['n_experts']}）</div>
 
 <div class="card">
-  <div class="issue">预测期号 <b>{n['target_issue']}</b> 期</div>
-  <div class="pick-card">
-    <div style="text-align:center"><div class="ball">{show_top3[0]}</div><div class="ball-label">杀和尾 {show_top3[0]}（票码1）</div></div>
-    {balls3}
-  </div>
-  <div class="formula-info">算法：Hedge {n['n_experts']}专家加权投票 · {pi['pool_size_total']:,}公式穷举选 Top{pi['topk']} · win={n['win']}（参数已锁定）</div>
-  {trans_note}
+  <div class="issue">预测期号 <b style="font-size:34px;letter-spacing:2px">{n['target_issue']}</b> 期</div>
+  <div class="pick-card" style="gap:8px">{ball3_html}</div>
 </div>
 
 <div class="card">
@@ -316,6 +311,7 @@ def build_html(d):
   ④ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错，是<b>唯一实战口径</b>。<br>
   ⑤ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
   ⑥ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
+  {trans_note}
 </div>
 </body>
 </html>
