@@ -24,7 +24,8 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 h1{font-size:19px}.sub{color:#888;font-size:12px;margin-top:4px}
 .ball-wrap{display:flex;justify-content:center;margin:16px 0}
 .ball{width:80px;height:80px;border-radius:50%;background:var(--red);color:#fff;font-size:42px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(224,69,58,.4)}
-.ball-label{text-align:center;font-size:13px;color:#666;margin-top:6px}
+.ball-votes{text-align:center;font-size:13px;color:#999;margin-top:8px;font-family:ui-monospace,Consolas,monospace}
+.ball-label{text-align:center;font-size:13px;color:#666;margin-top:4px}
 .issue{text-align:center;font-size:15px}.issue b{color:var(--red);font-size:20px}
 .formula-info{text-align:center;font-size:12px;color:#888;margin:8px 0}
 .stat-row{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
@@ -59,13 +60,16 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 .dot{width:16px;height:16px;border-radius:50%;font-size:9px;line-height:16px;text-align:center;color:#fff;flex:0 0 auto}
 .dot-ok{background:var(--green)}.dot-bad{background:var(--red)}
 .dot-row .dl{font-size:11px;color:#999;margin-left:2px}
-.pick-card{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pick-card{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
 .pick-card .ball{width:64px;height:64px;font-size:34px}
 @media (max-width:480px){
   body{padding:8px}
   .card{padding:12px;border-radius:10px;margin-bottom:10px}
   h1{font-size:17px}
-  .ball{width:68px;height:68px;font-size:36px}
+  .ball{width:56px;height:56px;font-size:30px}
+  .ball-votes{font-size:12px;margin-top:6px}
+  .ball-label{font-size:12px}
+  .issue b{font-size:30px !important}
   table{font-size:12px}
   th,td{padding:5px 3px}
   .tbl-scroll table{min-width:560px}
@@ -205,10 +209,12 @@ def build_html(d):
     except Exception:
         oos, oos_ok = None, False
 
-    # ── 2b. 预测票码 Top3 三球（卡片1：三球等宽平均分配，无杂项）──
+    # ── 2b. 预测票码 Top3 三球（卡片1：期号 + 三球均分 + 得票数 + 标签）──
+    _vote_dist = n.get('top3_vote_dist', [0]*10)
     ball3_html = "".join(
-        f'<div style="flex:1;text-align:center;min-width:0">'
+        f'<div style="flex:1;text-align:center;min-width:0;padding:0 4px">'
         f'<div class="ball">{c}</div>'
+        f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div>'
         f'<div class="ball-label">{"杀和尾 " + str(c) if i == 0 else "票码 " + str(c)}</div></div>'
         for i, c in enumerate(show_top3[:3]))
 
@@ -269,8 +275,9 @@ def build_html(d):
 <div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（固定专家 · K={n['n_experts']}）</div>
 
 <div class="card">
-  <div class="issue">预测期号 <b style="font-size:34px;letter-spacing:2px">{n['target_issue']}</b> 期</div>
-  <div class="pick-card" style="gap:8px">{ball3_html}</div>
+  <div class="issue">预测期号 <b style="font-size:36px;letter-spacing:3px">{n['target_issue']}</b> 期</div>
+  <div class="pick-card" style="gap:8px;margin-top:14px">{ball3_html}</div>
+  <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数=600专家加权合计</div>
 </div>
 
 <div class="card">
