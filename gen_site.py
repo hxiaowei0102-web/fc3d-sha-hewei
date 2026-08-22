@@ -24,7 +24,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 h1{font-size:19px}.sub{color:#888;font-size:12px;margin-top:4px}
 .ball-wrap{display:flex;justify-content:center;margin:16px 0}
 .ball{width:80px;height:80px;border-radius:50%;background:var(--red);color:#fff;font-size:42px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(224,69,58,.4)}
-.ball-votes{text-align:center;font-size:13px;color:#999;margin-top:8px;font-family:ui-monospace,Consolas,monospace}
+.ball-votes{text-align:center;font-size:13px;color:#999;margin-top:8px;white-space:nowrap;line-height:1.3}
 .ball-label{text-align:center;font-size:13px;color:#666;margin-top:4px}
 .issue{text-align:center;font-size:15px}.issue b{color:var(--red);font-size:20px}
 .issue-flex{display:grid;grid-template-columns:1fr auto 1fr;align-items:baseline;gap:10px;text-align:center}
@@ -219,7 +219,7 @@ def build_html(d):
     # ── 2b. 预测票码 Top3 三球（卡片1：期号 + 三球均分 + 得票数，无标签）──
     _vote_dist = n.get('top3_vote_dist', [0]*10)
     ball3_html = "".join(
-        f'<div style="flex:1;text-align:center;min-width:0;padding:0 4px">'
+        f'<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;padding:0 4px">'
         f'<div class="ball">{c}</div>'
         f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div></div>'
         for c in show_top3[:3])
