@@ -3,8 +3,7 @@
 福彩3D 杀和尾 — 生成固定静态网页「index.html」（v2.0 版式复刻）
 ==================================================================
 读 cache/result.json, 输出一个完全自包含的单文件 HTML（纯静态渲染，非 JS 动态）。
-版式 100% 复刻 v2.0 时代 index.html（标题 Hedge 单杀、80px 大红球、白卡片、
-本期专家投票 / 单杀命中率 / 专家级回测 / 最新500期明细 四卡，浅色移动优先）。
+当前版式：卡片1(期号+三球+得票数) + Hedge 加权投票详情卡，浅色移动优先。
 算法数据为当前 v3.2 锁定模式：3931万公式穷举 800 专家池【永久固定】，
 win/k 参数【锁定】→ 每天发布的预测 = 开奖完回测表同一期数值（确定性，可对账）。
 """
@@ -69,10 +68,6 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 """
 
 
-def esc(s):
-    return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-
-
 def build_html(d):
     n = d['next']
     s = d['summary']
@@ -89,20 +84,6 @@ def build_html(d):
         f'<div class="ball">{c}</div>'
         f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div></div>'
         for c in show_top3[:3])
-
-    # ── 3. 专家级回测（v2.0 表格样式，数据来自 leaderboard Top10）──
-    lb_rows = ""
-    for i, lb in enumerate(d['leaderboard'][:10]):
-        lb_rows += (
-            f'<tr><td>{i+1}</td><td style="text-align:left">{esc(lb["name"])}</td>'
-            f'<td>{lb["rate_recent"]*100:.2f}%</td><td>{esc(lb["fam"])}</td></tr>')
-    exp_bt_html = (
-        f'<table><thead><tr><th>#</th><th style="text-align:left">池内公式</th>'
-        f'<th>500期命中</th><th>族</th></tr></thead><tbody>{lb_rows}'
-        f'<tr style="font-weight:700;color:var(--green)"><td style="text-align:left" colspan="2">Hedge 加权投票</td>'
-        f'<td>{s["rate"]*100:.2f}%</td><td>K={n["n_experts"]}</td></tr>'
-        f'<tr style="color:#999"><td style="text-align:left" colspan="2">专家池平均（800 专家）</td>'
-        f'<td>{s["pool_avg"]*100:.2f}%</td><td>—</td></tr></tbody></table>')
 
     # ── 2c. Hedge 加权投票详情卡（10数字得票条形图 + 前5名 + 机制说明）──
     _dist = n.get('top3_vote_dist', [0]*10)
@@ -152,11 +133,6 @@ def build_html(d):
 </div>
 
 {hedge_card_html}
-
-<div class="card">
-  <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>
-  {exp_bt_html}
-</div>
 </body>
 </html>
 """
