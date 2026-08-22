@@ -61,7 +61,11 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 .sys-panel.on{display:block}
 .sys-badge{display:inline-block;font-size:11px;color:#fff;background:var(--red);border-radius:9px;padding:1px 7px;margin-left:6px;vertical-align:2px}
 .sys-badge.gray{background:#999}
-@media (max-width:480px){.sys-btn{font-size:13px;padding:6px 14px}}
+/* ── 回测表窗口切换（2026-08-22）── */
+.win-switch{display:flex;gap:8px;margin:10px 0 6px;flex-wrap:wrap}
+.win-btn{border:1px solid var(--line);background:var(--card);color:#666;border-radius:14px;padding:4px 13px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.win-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+@media (max-width:480px){.win-btn{font-size:12px;padding:3px 10px}}
 @media (max-width:480px){
   body{padding:8px}
   .card{padding:12px;border-radius:10px;margin-bottom:10px}
@@ -125,22 +129,9 @@ def render_sysA(d):
         f'<br>机制：3931万公式穷举 800 专家池（按近 {n["win"]} 期命中率取 Top{n["n_experts"]}），'
         f'命中率即权重（下限0.02）加权投票，票数最高的数字被「杀掉」。</div></div>')
 
-    # 1000期回测表
-    bt_rows_html = _render_bt_rows(d['rows'])
-    bt_total = len(d['rows'])
-    bt_hits = sum(1 for r in d['rows'] if r['hit'])
-    bt_card = (
-        f'<div class="card"><b>1000期回测表</b> '
-        f'<span style="color:#999;font-size:12px">近→远 · 逐期真实预测记录（walk-forward，不偷看未来）</span>'
-        f'<div class="stat-row"><span>杀1命中（1000期）</span>'
-        f'<span class="pct">{bt_hits}/{bt_total} = {bt_hits/bt_total*100:.2f}%</span></div>'
-        f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
-        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。</div>'
-        f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
-        f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
-        f'<tbody>{bt_rows_html}</tbody></table></div></div>'
-        f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
-        f'第 t 期预测只用 ≤ t-1 期数据；固定800专家 + 固定机制(win={n["win"]},K={n["n_experts"]}) 确定性重算 → 逐期真实预测记录。</div></div>')
+    # 回测表（含100/200/500/1000期窗口切换）
+    bt_card = _render_bt_card('A', d['rows'], '800专家',
+        f'第 t 期预测只用 ≤ t-1 期数据；固定800专家 + 固定机制(win={n["win"]},K={n["n_experts"]}) 确定性重算 → 逐期真实预测记录。')
 
     # 预测卡
     pred_card = (
@@ -199,22 +190,9 @@ def render_sysB(db):
         f'（下限0.02）加权投票，票数最高的数字被「杀掉」。<br>'
         f'本期各专家杀码：{exp_txt}</div></div>')
 
-    # 1000期回测表（B系统 rows 每期含 num/top3/hit）
-    bt_rows_html = _render_bt_rows(rows)
-    bt_total = len(rows)
-    bt_hits = sum(1 for r in rows if r['hit'])
-    bt_card = (
-        f'<div class="card"><b>1000期回测表</b> '
-        f'<span style="color:#999;font-size:12px">近→远 · 逐期真实预测记录（walk-forward，不偷看未来）</span>'
-        f'<div class="stat-row"><span>杀1命中（1000期）</span>'
-        f'<span class="pct">{bt_hits}/{bt_total} = {bt_hits/bt_total*100:.2f}%</span></div>'
-        f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
-        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。</div>'
-        f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
-        f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
-        f'<tbody>{bt_rows_html}</tbody></table></div></div>'
-        f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
-        f'第 t 期预测只用 ≤ t-1 期数据；固定5专家 + 固定机制(win={meta["window"]}) 确定性重算 → 逐期真实预测记录。</div></div>')
+    # 回测表（含100/200/500/1000期窗口切换）
+    bt_card = _render_bt_card('B', rows, '5专家',
+        f'第 t 期预测只用 ≤ t-1 期数据；固定5专家 + 固定机制(win={meta["window"]}) 确定性重算 → 逐期真实预测记录。')
 
     # 命中率汇总（多窗口）
     stat_rows = ""
@@ -239,10 +217,55 @@ def render_sysB(db):
     return pred_card + hedge_card + stats_card + bt_card
 
 
+def _render_bt_card(sys_id, rows, sys_name, note):
+    """回测表卡片：顶部 100/200/500/1000期 切换按钮 + 命中率联动 + 四个窗口表格。
+    sys_id ∈ {'A','B'} 用于区分两套独立切换（localStorage 各自记忆）。
+    """
+    wins = [100, 200, 500, 1000]
+    # 命中率：从近到远取窗口（rows 已是近→远）
+    rate_html = ""
+    for W in wins:
+        seg = rows[:W]
+        h = sum(1 for r in seg if r['hit'])
+        pct = h / len(seg) * 100 if seg else 0
+        active = 'active' if W == 1000 else ''
+        rate_html += (
+            f'<div class="stat-row" id="bt-rate-{sys_id}-{W}" style="display:none">'
+            f'<span>杀1命中（近{W}期）</span>'
+            f'<span class="pct">{h}/{len(seg)} = {pct:.2f}%</span></div>')
+    # 四个窗口的表格容器（默认1000期显示）
+    tbl_html = ""
+    for W in wins:
+        seg = rows[:W]
+        rows_html = _render_bt_rows(seg)
+        disp = 'style="display:block"' if W == 1000 else 'style="display:none"'
+        tbl_html += (
+            f'<div id="bt-tbl-{sys_id}-{W}" class="bt-win-tbl" {disp}>'
+            f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
+            f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
+            f'<tbody>{rows_html}</tbody></table></div></div></div>')
+    # 窗口切换按钮（默认1000 active）
+    btns = ""
+    for W in wins:
+        active = 'active' if W == 1000 else ''
+        btns += (
+            f'<button class="win-btn {active}" data-sys="{sys_id}" data-w="{W}" '
+            f'onclick="switchBtWin(\'{sys_id}\', {W})">{W}期</button>')
+    return (
+        f'<div class="card"><b>回测表</b> '
+        f'<span style="color:#999;font-size:12px">{sys_name} · 近→远 · 逐期真实预测记录（walk-forward，不偷看未来）</span>'
+        f'<div class="win-switch">{btns}</div>'
+        f'{rate_html}'
+        f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
+        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。</div>'
+        f'{tbl_html}'
+        f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">{note}</div></div>')
+
+
 def _render_bt_rows(rows):
     """两系统共用的回测表行渲染：只把杀错的单个数字变红（独立判断）。"""
     out = ""
-    for r in rows[:1000]:
+    for r in rows:
         tail = sum(int(c) for c in r['num']) % 10
         top3 = r['top3']
         def _cell(code):
@@ -293,10 +316,23 @@ function switchSys(s){{
   document.getElementById('sysB').classList.toggle('on', s==='B');
   try{{localStorage.setItem('sha_hewei_sys', s)}}catch(e){{}}
 }}
+function switchBtWin(sys, w){{
+  document.querySelectorAll('.win-btn[data-sys="'+sys+'"]').forEach(b=>b.classList.toggle('active', +b.dataset.w===w));
+  [100,200,500,1000].forEach(x=>{{
+    var t=document.getElementById('bt-tbl-'+sys+'-'+x), r=document.getElementById('bt-rate-'+sys+'-'+x);
+    if(t) t.style.display = (x===w)?'block':'none';
+    if(r) r.style.display = (x===w)?'block':'none';
+  }});
+  try{{localStorage.setItem('sha_hewei_bt_'+sys, w)}}catch(e){{}}
+}}
 (function(){{
   try{{
     var s = localStorage.getItem('sha_hewei_sys');
     if(s === 'B') switchSys('B');
+    ['A','B'].forEach(function(sys){{
+      var w = localStorage.getItem('sha_hewei_bt_'+sys);
+      if(w && [100,200,500,1000].indexOf(+w)>=0) switchBtWin(sys, +w);
+    }});
   }}catch(e){{}}
 }})();
 </script>
