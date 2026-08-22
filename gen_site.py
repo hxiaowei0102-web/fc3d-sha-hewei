@@ -123,29 +123,6 @@ def ledger_rows_html(records, limit=100):
     return rows_html
 
 
-def backtest_rows_html(d, limit=100):
-    """500期回测明细（锁定池逐期真实，walk-forward，与发布记录一致可对账）。
-    近期在上。列: 期号 / 号码 / 和尾 / 专家池平均命中 / 杀1码 / 对错 / 票码Top3 / 主投专家"""
-    rows_html = ""
-    for r in d['rows'][:limit]:
-        cls = "miss-row" if not r['hit'] else ""
-        order = sorted(range(10), key=lambda x: -r['votes'][x])
-        tail = sum(int(c) for c in r['num']) % 10
-        top3 = "·".join(str(c) for c in order[:3])
-        fname = r.get('fname', '')
-        fam = r.get('fam', '')
-        rows_html += (
-            f'<tr class="{cls}"><td class="iss">{esc(r["issue"])}</td>'
-            f'<td class="num">{esc(r["num"])}</td>'
-            f'<td class="num" style="color:var(--green)">{tail}</td>'
-            f'<td class="t3">{r["rate"]*100:.1f}%</td>'
-            f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
-            f'<td>{"✅" if r["hit"] else "❌"}</td>'
-            f'<td class="t3">{top3}</td>'
-            f'<td class="fname">{esc(fname)}</td></tr>')
-    return rows_html
-
-
 def ledger_stats(records):
     """账本命中率统计（只看已开奖的）"""
     settled = [r for r in records if r.get('hit') is not None]
@@ -190,8 +167,7 @@ def build_html(d):
             f'ℹ️ 本期 {n["target_issue"]} 开奖前曾发布<b>杀 {pub["kill"]}</b>（K=56时代，见下方发布记录）；'
             f'上方为 K={n["n_experts"]} 优化后的预测票码 Top3，<b>自下期起以 K={n["n_experts"]} 为准</b>。</div>')
 
-    # 500期回测明细（锁定池逐期真实，与发布记录一致可对账）
-    backtest_rows = backtest_rows_html(d, limit=100)
+    # 500期回测明细已移除（老板要求只保留实战口径：真实发布记录）
 
     # ── 1. 本期专家投票（v2.0 exp-row 样式，静态渲染，无展开明细）──
     experts_html = ""
@@ -326,14 +302,7 @@ def build_html(d):
 </div>
 
 <div class="card">
-  <b>最新 500 期回测表</b> <span style="color:#999;font-size:12px">锁定池逐期真实（walk-forward）· 近→远 · 与发布记录可对账</span>
-  <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">专家池平均命中率</span></div>
-  <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>专家均</th><th>杀1</th><th>对错</th><th>票码Top3</th><th>主投专家</th></tr></thead>
-  <tbody>{backtest_rows}</tbody></table></div></div>
-</div>
-
-<div class="card">
-  <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 近→远 · 手机左右滑动看全</span>
+  <b>真实发布记录（逐期）</b> <span style="color:#999;font-size:12px">每一期都是开奖前发布 · 开奖后自动验证 · 近→远 · 手机左右滑动看全</span>
   <div class="dot-row"><span class="dot dot-ok">✓</span><span class="dl">杀对</span><span class="dot dot-bad">✗</span><span class="dl">杀错</span><span class="dl" style="margin-left:8px">⏳待开奖</span></div>
   <div class="tbl-scroll"><div class="tbl-wrap"><table><thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>—</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀2码</th><th>发布时间</th></tr></thead>
   <tbody>{ledger_rows}</tbody></table></div></div>
@@ -343,8 +312,8 @@ def build_html(d):
   <b>说明</b><br>
   ① 杀和尾 = 预测杀掉 0-9 中一个数字，下期<b>和尾</b>不出现即命中，理论随机基线 <b>90%</b>。<br>
   ② 公式池 {pi['pool_size_total']:,} 个（{pi['n_features']} 特征线性组合）在<b>最新500期</b>按命中率选 Top{pi['topk']} 专家池，<b>首次锁定后永久固定</b>；主机制 <b>Hedge 加权投票</b>：每期取近 {n['win']} 期命中率 Top{n['n_experts']} 专家，按命中率加权投票，票王 = 和尾杀码。参数 <b>win={n['win']}/K={n['n_experts']} 已锁定</b>，不再每日重选。<br>
-  ③ <b>确定性保证（v2.0 同款语义）</b>：专家池与参数永久固定 → 每天发布的预测 = 开奖完回测表同一期数值。上方【最新500期回测表】与【真实发布记录】可逐期对账：同一期杀码必然一致。<br>
-  ④ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错。<br>
+  ③ <b>确定性保证（v2.0 同款语义）</b>：专家池与参数永久固定 → 每天发布的预测 = 开奖后验证的记录，发布值可随时对账（发布时存档、开奖后补标对错）。<br>
+  ④ 上方【真实发布记录】为<b>逐期开奖前发布的预测</b>：第 t 期发布时只用第 t-1、t-2 期及更早数据（walk-forward，不偷看未来），发布后存档、开奖后自动补标对错，是<b>唯一实战口径</b>。<br>
   ⑤ <b>选择偏差警示</b>：专家池是在回测的同一段 500 期上按命中率选出的，算法回测数字含轻微选择偏差，样本外会回落；<b>不构成任何购彩建议</b>。<br>
   ⑥ 生成于 <b>{d['generated_at']}</b> · 数据更新后请重新导出。
 </div>
