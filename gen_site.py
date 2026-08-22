@@ -82,32 +82,6 @@ def build_html(d):
     # 卡片1 = 直接显示算法预测票码 Top3（票数前三名）
     show_top3 = list(n['top3_vote'][:3])   # 算法票王 + 票数第2/第3
 
-    # ── 2. 三口径命中率对照（训练窗口 vs 样本外）──
-    # 训练窗口（500期，result.json 逐期真实）：专家被选出的同段数据 → 选择偏差，仅供对账
-    # 样本外（2000期，2019144~2025074，专家从未见过）：真实未来预期
-    rows_all = d['rows']
-    _order_tr = [sorted(range(10), key=lambda x: -r['votes'][x]) for r in rows_all]
-    _tail_tr = [sum(int(c) for c in r['num']) % 10 for r in rows_all]
-    def _cnt3(sel):
-        return sum(1 for o, tl in zip(_order_tr, _tail_tr) if tl not in set(o[:sel]))
-    top3_hits = _cnt3(3)
-    top3_rate = top3_hits / len(rows_all)
-    kill_hits = sum(1 for r in rows_all if r['hit'])
-    kill_rate = kill_hits / len(rows_all)
-    # 近100期
-    _o100 = _order_tr[:100]; _t100 = _tail_tr[:100]
-    k100 = sum(1 for o, tl in zip(_o100, _t100) if tl not in {o[0]})
-    t2_100 = sum(1 for o, tl in zip(_o100, _t100) if tl not in set(o[:2]))
-    t3_100 = sum(1 for o, tl in zip(_o100, _t100) if tl not in set(o[:3]))
-    # 样本外（top3_backtest.json，缺失时回退为 None → 页面隐藏样本外行）
-    try:
-        with open(os.path.join(BASE_DIR, 'cache', 'top3_backtest.json'), 'r', encoding='utf-8') as _f:
-            _bt = json.load(_f)
-        oos = _bt['oos_window']
-        oos_ok = True
-    except Exception:
-        oos, oos_ok = None, False
-
     # ── 2b. 预测票码 Top3 三球（卡片1：期号 + 三球均分 + 得票数，无标签）──
     _vote_dist = n.get('top3_vote_dist', [0]*10)
     ball3_html = "".join(
@@ -115,36 +89,6 @@ def build_html(d):
         f'<div class="ball">{c}</div>'
         f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div></div>'
         for c in show_top3[:3])
-
-    # 三口径对照行（训练 vs 样本外）
-    def _rate_tr(sel):
-        return round(_cnt3(sel) / len(rows_all) * 100, 2)
-    if oos_ok:
-        _o1 = f'{oos["kill"]["rate"]:.2f}%'
-        _o2 = f'{oos["top2"]["rate"]:.2f}%'
-        _o3 = f'{oos["top3"]["rate"]:.2f}%'
-    else:
-        _o1 = _o2 = _o3 = '—'
-    _tr_row = (
-        f'<tr><td>票码1（杀1码）</td><td>{_rate_tr(1):.2f}%</td><td>基线90%</td>'
-        f'<td>{_o1}</td><td>基线90%</td></tr>'
-        f'<tr><td>票码2（杀2码）</td><td>{_rate_tr(2):.2f}%</td><td>基线80%</td>'
-        f'<td>{_o2}</td><td>基线80%</td></tr>'
-        f'<tr><td>票码3（杀3码）</td><td>{_rate_tr(3):.2f}%</td><td>基线70%</td>'
-        f'<td>{_o3}</td><td>基线70%</td></tr>'
-    )
-    if oos_ok:
-        _oos_note = f'样本外=2019144~2025074 共 {oos["kill"]["n"]} 期（专家从未见过的历史数据，真实预期）'
-    else:
-        _oos_note = '样本外数据缺失'
-    _note_oos = (
-        f'<div style="background:#f2f9f2;border:1px solid #bfe3c4;border-radius:8px;padding:8px 12px;'
-        f'margin-top:10px;font-size:12px;color:#1a6b35;line-height:1.6">'
-        f'<b>样本外验证</b>：训练窗口500期 100% 是<b>选择偏差</b>（专家池正是从这500期里挑的），'
-        f'不可作为未来预期；真实水平看样本外：{_oos_note}。<br>'
-        f'票码1 <b>{oos["kill"]["rate"]:.2f}%</b>（基线90%）、'
-        f'票码2 <b>{oos["top2"]["rate"]:.2f}%</b>（基线80%）、'
-        f'票码3 <b>{oos["top3"]["rate"]:.2f}%</b>（基线70%）——贴近随机基线，无稳定超额。</div>' if oos_ok else '')
 
     # ── 3. 专家级回测（v2.0 表格样式，数据来自 leaderboard Top10）──
     lb_rows = ""
@@ -208,19 +152,6 @@ def build_html(d):
 </div>
 
 {hedge_card_html}
-
-<div class="card">
-  <b>预测票码 Top3 命中率</b> <span style="color:#999;font-size:12px">杀3码（和尾 ∉ Top3 即安全）</span>
-  <div class="formula-info">下期 {n['target_issue']} 预测票码：{'、'.join(str(c) for c in show_top3)}（票数前3）</div>
-  <div class="tbl-scroll"><div class="tbl-wrap"><table>
-    <thead><tr><th>口径</th><th>训练500期</th><th>基线</th><th>样本外2000期</th><th>基线</th></tr></thead>
-    <tbody>
-      {_tr_row}
-    </tbody></table></div></div>
-  <div class="stat-row"><span>近100期（训练窗尾段）</span>
-    <span class="pct">票1 {k100/100*100:.1f}% · 票2 {t2_100/100*100:.1f}% · 票3 {t3_100/100*100:.1f}%</span></div>
-  {_note_oos}
-</div>
 
 <div class="card">
   <b>专家级回测</b> <span style="color:#999;font-size:12px">（500期 · 池内 Top10 对照）</span>
