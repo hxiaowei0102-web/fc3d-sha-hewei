@@ -194,7 +194,6 @@ def render_sysA(d):
 def render_sysB(db):
     pred = db['prediction']
     meta = db['meta']
-    ws = db['window_stats']
     rows = db['rows']
 
     # 预测球
@@ -241,19 +240,6 @@ def render_sysB(db):
     bt_card = _render_bt_card('B', rows, '5专家',
         f'第 t 期预测只用 ≤ t-1 期数据；固定5专家 + 固定机制(win={meta["window"]}) 确定性重算 → 逐期真实预测记录。')
 
-    # 命中率汇总（多窗口）
-    stat_rows = ""
-    for W in (100, 200, 500, 1000):
-        w = ws.get(str(W), {})
-        if not w:
-            continue
-        stat_rows += (
-            f'<div class="stat-row"><span>近{W}期</span>'
-            f'<span class="pct">{w["pct"]}% <span style="color:#999;font-size:12px">(基线{w["base_pct"]}%)</span></span></div>')
-    stats_card = (
-        f'<div class="card"><b>多窗口命中率</b> <span style="color:#999;font-size:12px">v2.0五专家 · 全量{meta["full_hit"]}%（基线{meta["full_base"]}%）</span>'
-        f'{stat_rows}</div>')
-
     # 预测卡
     pred_card = (
         f'<div class="card">'
@@ -261,7 +247,7 @@ def render_sysB(db):
         f'<div style="margin-top:14px">{ball_html}</div>'
         f'<div class="formula-info" style="margin-top:14px">Hedge 5专家加权投票 · win={meta["window"]} · 参数已锁定 · 票数=5专家加权合计</div>'
         f'</div>')
-    return pred_card + hedge_card + stats_card + bt_card
+    return pred_card + hedge_card + bt_card
 
 
 def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='逐期真实预测记录（walk-forward，不偷看未来）', issue_head='期号'):
