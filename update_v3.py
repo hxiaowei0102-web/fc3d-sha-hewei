@@ -25,20 +25,25 @@ def current_fingerprint():
     return f"{len(issues)}_{issues[-1]}"
 
 
-LOCKED_PARAMS = {'win': 40, 'k': 56}   # v2.0 同款确定性：首次锁定后永久固定
+# 2026-08-22 老板拍板锁 (40,650)：四窗口网格扫描近100/200/500期100%并列(选择偏差饱和)，
+# 近1000期96.40%全场最高(超挑选窗=真实区分)破平局；样本外91.35%、验证段91.8%。
+LOCKED_PARAMS = {'win': 40, 'k': 650}   # 确定性：首次锁定后永久固定（勿改，除非老板重新拍板）
 
 
 def _lock_pool_params():
     """把 win/k 锁定参数写入 cache/pool.json 的 locked 字段。
     之后：① 专家池永久固定不再重选  ② Hedge 参数固定不再网格扫描
     → 每天发布的预测 = 开奖完回测表同一期数值（纯确定性函数）。
-    幂等：已锁定则跳过。
+    幂等：已锁定则跳过；若已锁定值与 LOCKED_PARAMS 不一致则告警（防参数漂移）。
     """
     try:
         p = 'cache/pool.json'
         with open(p, 'r', encoding='utf-8') as f:
             pj = json.load(f)
         if pj.get('locked'):
+            cur = pj['locked']
+            if cur != LOCKED_PARAMS:
+                print(f"  ⚠ 已锁定参数 {cur} ≠ 代码 LOCKED_PARAMS {LOCKED_PARAMS}，请人工核对！")
             return
         pj['locked'] = dict(LOCKED_PARAMS)
         pj['locked_at'] = datetime.now(BJT).strftime('%Y-%m-%d %H:%M:%S')
