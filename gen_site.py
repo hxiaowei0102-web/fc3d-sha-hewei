@@ -140,31 +140,44 @@ def render_sysA(d):
         for _r in _recs[:60]:
             _issue = _r.get('issue', '?')
             _kill = _r.get('kill', '?')
+            _top2 = _r.get('top2') or []
+            _kill2 = _top2[1] if len(_top2) > 1 else '?'
             _hit = _r.get('hit')
+            _hit2 = _r.get('hit2')
             _num = _r.get('num') or '待开奖'
             _tail = _r.get('tail')
             if _hit is True:
-                _cell = f'<td class="ok" style="font-weight:700;color:var(--green)">✓ 杀对</td>'
+                _c1 = f'<span class="ok" style="font-weight:700;color:var(--green)">✓</span>'
             elif _hit is False:
-                _cell = f'<td class="miss" style="font-weight:700;color:var(--red)">✗ 杀错(和尾{_tail})</td>'
+                _c1 = f'<span class="miss" style="font-weight:700;color:var(--red)">✗</span>'
             else:
-                _cell = f'<td style="color:#999">待开奖</td>'
+                _c1 = f'<span style="color:#999">-</span>'
+            if _hit2 is True:
+                _c2 = f'<span class="ok" style="font-weight:700;color:var(--green)">✓</span>'
+            elif _hit2 is False:
+                _c2 = f'<span class="miss" style="font-weight:700;color:var(--red)">✗</span>'
+            else:
+                _c2 = f'<span style="color:#999">-</span>'
             _note_rows += (
                 f'<tr><td class="iss">{_issue}</td>'
                 f'<td style="font-weight:700">{_num}</td>'
                 f'<td style="font-weight:700">{_tail if _tail is not None else "-"}</td>'
-                f'<td style="font-weight:700">{_kill}</td>{_cell}</tr>')
+                f'<td style="font-weight:700">{_kill}</td>'
+                f'<td style="font-weight:700">{_kill2}</td>'
+                f'<td style="text-align:center">{_c1} {_c2}</td></tr>')
         _note_html = (
             f'<div class="card"><b>预测笔记</b> '
             f'<span style="color:#999;font-size:12px">800专家 · 每日开奖前真实发布 · 开奖后自动核对（近期在上）</span>'
             f'<div class="stat-row"><span>累计命中率（已核对{_st["settled"]}期）</span>'
             f'<span class="pct" style="color:var(--red)">杀1 {_st["rate"]:.2f}%'
-            f'<span style="color:#999;font-size:12px">（{_st["hits"]}对/{_st["misses"]}错 · 共发布{_st["total"]}条 · {_st["pending"]}期待开奖）</span></span></div>'
+            f'<span style="color:#999;font-size:12px">（{_st["hits"]}对/{_st["misses"]}错）</span>'
+            f'　<span style="color:var(--red)">杀2 {_st["rate2"]:.2f}%'
+            f'<span style="color:#999;font-size:12px">（{_st["hits2"]}对/{_st["misses2"]}错 · 共发布{_st["total"]}条 · {_st["pending"]}期待开奖）</span></span></span></div>'
             f'<div class="tbl-scroll"><div class="tbl-wrap" style="max-height:38vh"><table>'
-            f'<thead><tr><th>预测期号</th><th>开奖号码</th><th>和尾</th><th>杀1</th><th>核对</th></tr></thead>'
+            f'<thead><tr><th>预测期号</th><th>开奖号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>核对</th></tr></thead>'
             f'<tbody>{_note_rows}</tbody></table></div></div>'
             f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
-            f'每条记录 = 开奖前真实发布的预测（非回测）。开奖后自动补标 ✓/✗，累计命中率持续跟踪。'
+            f'每条记录 = 开奖前真实发布的预测（非回测）。杀1/杀2 各自独立核对（✓=和尾≠该杀码），开奖后自动补标，累计命中率持续跟踪。'
             f'数据源更新后本表自动累积，可对账。</div></div>')
     except Exception as _e:
         _note_html = f'<div class="card"><b>预测笔记</b> <span style="color:#999;font-size:12px">账本未初始化，待首次发布后生成</span></div>'

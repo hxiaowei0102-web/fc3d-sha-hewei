@@ -71,13 +71,15 @@ def settle_past(issues, hh, tt, oo):
         tail_of[iss] = (hh[i] + tt[i] + oo[i]) % 10
     changed = 0
     for rec in ledger['records']:
-        if rec['hit'] is not None:
+        if rec['issue'] not in tail_of:
             continue
-        if rec['issue'] in tail_of:
-            rec['tail'] = tail_of[rec['issue']]
-            rec['num'] = f"{hh[issues.index(rec['issue'])]}{tt[issues.index(rec['issue'])]}{oo[issues.index(rec['issue'])]}"
-            rec['hit'] = bool(rec['kill'] != rec['tail'])
-            changed += 1
+        rec['tail'] = tail_of[rec['issue']]
+        rec['num'] = f"{hh[issues.index(rec['issue'])]}{tt[issues.index(rec['issue'])]}{oo[issues.index(rec['issue'])]}"
+        # 杀1命中 = 和尾 != 票王; 杀2命中 = 和尾 != 次高票（两码独立核对）
+        rec['hit'] = bool(rec['kill'] != rec['tail'])
+        _top2 = rec.get('top2') or []
+        rec['hit2'] = bool(len(_top2) > 1 and _top2[1] != rec['tail'])
+        changed += 1
     if changed:
         _save(ledger)
         print(f"[账本] 补标 {changed} 期开奖结果")
@@ -91,17 +93,22 @@ def get_records():
 
 
 def get_stats():
-    """累计命中率统计：settled=已开奖核对数, hits=杀对数, rate=累计命中率, pending=待开奖数"""
+    """累计命中率统计：settled=已开奖核对数, hits=杀1对数, hits2=杀2对数, rate=杀1累计命中率,
+    rate2=杀2累计命中率, pending=待开奖数"""
     recs = get_records()
     settled = [r for r in recs if r.get('hit') is not None]
     hits = sum(1 for r in settled if r['hit'])
+    hits2 = sum(1 for r in settled if r.get('hit2'))
     n = len(settled)
     return {
         'total': len(recs),          # 总发布数（含待开奖）
         'settled': n,                # 已核对数
-        'hits': hits,                # 杀对数
-        'misses': n - hits,          # 杀错数
-        'rate': round(hits / n * 100, 2) if n else 0.0,   # 累计命中率
+        'hits': hits,                # 杀1对数
+        'misses': n - hits,          # 杀1错数
+        'rate': round(hits / n * 100, 2) if n else 0.0,   # 杀1累计命中率
+        'hits2': hits2,              # 杀2对数
+        'misses2': n - hits2,        # 杀2错数
+        'rate2': round(hits2 / n * 100, 2) if n else 0.0,  # 杀2累计命中率
         'pending': len(recs) - n,    # 待开奖数
     }
 
