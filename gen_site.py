@@ -228,18 +228,6 @@ def build_html(d):
         oos_ok = True
     except Exception:
         oos, oos_ok = None, False
-    stats_html = (
-        f'<div class="stat-row"><span>500期回测命中率（杀1码）</span>'
-        f'<span class="pct">{s["rate"]*100:.2f}%</span>'
-        f'<span style="color:#999;font-size:12px">基线{s["baseline"]*100:.0f}% ({s["rate"]-s["baseline"]:+.1%})</span>'
-        f'<span style="color:#999;font-size:12px">{s["hit"]}/{s["total"]}</span></div>'
-        f'<div class="stat-row"><span>当前连中</span><span class="pct">{s["cur_win"]} 期</span>'
-        f'<span style="color:#999;font-size:12px">最大连中 {s["max_win"]} 期</span></div>'
-        f'<div class="stat-row"><span>最大连错</span>'
-        f'<span class="miss" style="color:var(--red);font-weight:700">{s["max_lose"]} 期</span>'
-        f'<span style="color:#999;font-size:12px">专家池均值 {s["pool_avg"]*100:.2f}%</span></div>'
-        f'<div class="stat-row"><span>投票参数</span><span>K={n["n_experts"]} · win={n["win"]}</span>'
-        f'<span style="color:#999;font-size:12px">参数已锁定 · 确定性</span></div>')
 
     # ── 2b. 预测票码 Top3 三球（卡片1直接展示）──
     top2_next = show_top3[1:]          # 第2、第3码
@@ -330,11 +318,6 @@ def build_html(d):
 <div class="card">
   <b>本期专家投票</b> <span style="color:#999;font-size:12px">（{n['n_experts']} 位专家 · 权重=近 {n['win']} 期命中率）</span>
   <div class="tbl-wrap" style="max-height:45vh">{experts_html}</div>
-</div>
-
-<div class="card">
-  <b>单杀命中率</b>
-  {stats_html}
 </div>
 
 <div class="card">
