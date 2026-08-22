@@ -123,28 +123,31 @@ def build_html(d):
     for r in d['rows'][:1000]:
         tail = sum(int(c) for c in r['num']) % 10
         top3 = r['top3']
-        cls = "miss-row" if not r['hit'] else ""
-        ok2 = tail not in set(top3[:2])
+        # 杀1/杀2/杀3 三列独立上色：命中绿、未命中红（多错用颜色区分）
+        def _cell(code, hit_ok):
+            cls = "hit" if hit_ok else "miss"
+            return f'<td class="{cls}" style="font-weight:700">{code}</td>'
+        cells = "".join(
+            _cell(top3[i], tail not in set(top3[:i+1])) for i in range(3))
+        # 整行红底：杀1错（最核心）
+        row_cls = "miss-row" if tail in set(top3[:1]) else ""
         bt_rows_html += (
-            f'<tr class="{cls}"><td class="iss">{esc(r["issue"])}</td>'
+            f'<tr class="{row_cls}"><td class="iss">{esc(r["issue"])}</td>'
             f'<td class="num">{r["num"]}</td>'
             f'<td class="num" style="color:var(--green)">{tail}</td>'
-            f'<td class="{"hit" if r["hit"] else "miss"}">{r["kill"]}</td>'
-            f'<td>{"✅" if r["hit"] else "❌"}</td>'
-            f'<td class="{"hit" if ok2 else "miss"}">{"✅" if ok2 else "❌"}</td>'
-            f'<td class="t3">{esc("·".join(str(x) for x in top3))}</td></tr>')
+            f'{cells}</tr>')
     bt_total = len(d['rows'])
     bt_hits = sum(1 for r in d['rows'] if r['hit'])
     bt_card_html = (
         f'<div class="card"><b>1000期回测表</b> '
         f'<span style="color:#999;font-size:12px">近→远 · 逐期真实预测记录（walk-forward，不偷看未来）</span>'
-        f'<div class="stat-row"><span>1000期命中</span>'
+        f'<div class="stat-row"><span>杀1命中（1000期）</span>'
         f'<span class="pct">{bt_hits}/{bt_total} = {bt_hits/bt_total*100:.2f}%</span></div>'
-        f'<div class="dot-row" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;align-items:center">'
-        f'<span class="dot dot-ok">✓</span><span class="dl" style="font-size:11px;color:#999">杀对</span>'
-        f'<span class="dot dot-bad">✗</span><span class="dl" style="font-size:11px;color:#999">杀错</span></div>'
+        f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
+        f'<span class="hit">🟢 绿=杀对</span> &nbsp; <span class="miss">🔴 红=杀错</span>'
+        f'&nbsp; 整行红底=杀1错；杀2/杀3错仅该格变红，错得越多红格越多。</div>'
         f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
-        f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀1对</th><th>杀2对</th><th>杀1·2·3码</th></tr></thead>'
+        f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
         f'<tbody>{bt_rows_html}</tbody></table></div></div>'
         f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
         f'第 t 期预测只用 ≤ t-1 期数据；固定800专家 + 固定机制(win=40,K=650) 确定性重算 → 逐期真实预测记录。</div></div>')
