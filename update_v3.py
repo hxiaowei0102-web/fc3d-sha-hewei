@@ -136,6 +136,22 @@ def main():
     import hedge_engine
     hedge_engine.run()
 
+    # ---- [4.7/5] 预测笔记（账本）：补标旧记录 + 记录本次真实发布 ----
+    print("\n[4.7/5] 预测笔记（账本）")
+    try:
+        import ledger
+        from engine import load_data
+        _issues, _hh, _tt, _oo = load_data('fc3d-history.csv')
+        n_settled = ledger.settle_past(_issues, _hh, _tt, _oo)
+        if need_result or True:
+            with open('cache/result.json', 'r', encoding='utf-8') as f:
+                _rj = json.load(f)
+            ledger.record_publication(_rj['next'], _rj['data_info']['last'])
+        _stats = ledger.get_stats()
+        print(f"  [账本] 共 {_stats['total']} 条发布记录 | 已核对 {_stats['settled']} | 累计命中率 {_stats['rate']}% ({_stats['hits']}/{_stats['settled']}) | 待开奖 {_stats['pending']}")
+    except Exception as _e:
+        print(f"  ⚠ 账本异常（不影响主流程）: {_e}")
+
     # ---- [5/5] 生成网页 ----
     print("\n[5/5] 生成静态网页")
     import gen_site

@@ -131,10 +131,44 @@ def render_sysA(d):
         f'<br>机制：3931万公式穷举 800 专家池（按近 {n["win"]} 期命中率取 Top{n["n_experts"]}），'
         f'命中率即权重（下限0.02）加权投票，票数最高的数字被「杀掉」。</div></div>')
 
-    # 实战记录（A系统回测表更名，含100/200/500/1000期窗口切换）
-    bt_card = _render_bt_card('A', d['rows'], '800专家',
-        f'第 t 期只用 ≤ t-1 期数据；固定800专家 + 固定机制(win={n["win"]},K={n["n_experts"]}) 确定性重算 → 逐期实战记录。',
-        title='实战记录', sub_note='逐期实战记录（walk-forward，不偷看未来）', issue_head='预测期号')
+    # 预测笔记（真实发布台账：每天开奖前发布的预测 + 开奖后自动核对 + 累计命中率）
+    try:
+        import ledger as _ledger
+        _recs = _ledger.get_records()
+        _st = _ledger.get_stats()
+        _note_rows = ""
+        for _r in _recs[:60]:
+            _issue = _r.get('issue', '?')
+            _kill = _r.get('kill', '?')
+            _hit = _r.get('hit')
+            _num = _r.get('num') or '待开奖'
+            _tail = _r.get('tail')
+            if _hit is True:
+                _cell = f'<td class="ok" style="font-weight:700;color:var(--green)">✓ 杀对</td>'
+            elif _hit is False:
+                _cell = f'<td class="miss" style="font-weight:700;color:var(--red)">✗ 杀错(和尾{_tail})</td>'
+            else:
+                _cell = f'<td style="color:#999">待开奖</td>'
+            _note_rows += (
+                f'<tr><td class="iss">{_issue}</td>'
+                f'<td style="font-weight:700">{_num}</td>'
+                f'<td style="font-weight:700">{_tail if _tail is not None else "-"}</td>'
+                f'<td style="font-weight:700">{_kill}</td>{_cell}</tr>')
+        _note_html = (
+            f'<div class="card"><b>预测笔记</b> '
+            f'<span style="color:#999;font-size:12px">800专家 · 每日开奖前真实发布 · 开奖后自动核对（近期在上）</span>'
+            f'<div class="stat-row"><span>累计命中率（已核对{_st["settled"]}期）</span>'
+            f'<span class="pct" style="color:var(--red)">杀1 {_st["rate"]:.2f}%'
+            f'<span style="color:#999;font-size:12px">（{_st["hits"]}对/{_st["misses"]}错 · 共发布{_st["total"]}条 · {_st["pending"]}期待开奖）</span></span></div>'
+            f'<div class="tbl-scroll"><div class="tbl-wrap" style="max-height:38vh"><table>'
+            f'<thead><tr><th>预测期号</th><th>开奖号码</th><th>和尾</th><th>杀1</th><th>核对</th></tr></thead>'
+            f'<tbody>{_note_rows}</tbody></table></div></div>'
+            f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
+            f'每条记录 = 开奖前真实发布的预测（非回测）。开奖后自动补标 ✓/✗，累计命中率持续跟踪。'
+            f'数据源更新后本表自动累积，可对账。</div></div>')
+    except Exception as _e:
+        _note_html = f'<div class="card"><b>预测笔记</b> <span style="color:#999;font-size:12px">账本未初始化，待首次发布后生成</span></div>'
+    bt_card = _note_html
 
     # 预测卡
     pred_card = (
