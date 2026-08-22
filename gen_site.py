@@ -37,16 +37,6 @@ h1{font-size:19px}.sub{color:#888;font-size:12px;margin-top:4px}
 }.formula-info{text-align:center;font-size:12px;color:#888;margin:8px 0}
 .stat-row{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
 .stat-row:last-child{border-bottom:none}.pct{font-weight:700;color:var(--green)}
-.exp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;list-style:none}
-.exp-row:last-child{border-bottom:none}
-.exp-name{color:#444}.exp-kill{font-weight:700;color:var(--red)}
-.exp-w{color:#999;font-size:12px}
-.exp-detail{display:block;border-bottom:1px solid var(--line)}
-.exp-detail:last-child{border-bottom:none}
-.exp-detail summary::-webkit-details-marker{display:none}
-.exp-toggle{color:#bbb;font-size:12px;transition:transform .2s;margin-left:8px}
-.exp-detail[open] .exp-toggle{transform:rotate(90deg)}
-.exp-detail .tbl-wrap{border-top:1px dashed var(--line);padding-top:4px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:6px 3px;text-align:center;border-bottom:1px solid var(--line)}
 thead th{position:sticky;top:0;background:#fafbfc;font-size:12px;color:#666;z-index:1}
@@ -180,16 +170,6 @@ def build_html(d):
 
     # 500期回测明细已移除（老板要求只保留实战口径：真实发布记录）
 
-    # ── 1. 本期专家投票（v2.0 exp-row 样式，静态渲染，无展开明细）──
-    experts_html = ""
-    for i, e in enumerate(n['experts']):
-        experts_html += (
-            f'<div class="exp-row"><span class="exp-name">#{i+1} {esc(e["name"])}</span>'
-            f'<span class="exp-kill">杀 {e["kill"]}</span>'
-            f'<span class="exp-w">权重 {e["weight"]:.3f}</span></div>')
-    if not experts_html:
-        experts_html = '<div style="color:#999;padding:8px">无专家数据</div>'
-
     # ── 2. 三口径命中率对照（训练窗口 vs 样本外）──
     # 训练窗口（500期，result.json 逐期真实）：专家被选出的同段数据 → 选择偏差，仅供对账
     # 样本外（2000期，2019144~2025074，专家从未见过）：真实未来预期
@@ -268,6 +248,35 @@ def build_html(d):
         f'<tr style="color:#999"><td style="text-align:left" colspan="2">专家池平均（800 专家）</td>'
         f'<td>{s["pool_avg"]*100:.2f}%</td><td>—</td></tr></tbody></table>')
 
+    # ── 2c. Hedge 加权投票详情卡（10数字得票条形图 + 前5名 + 机制说明）──
+    _dist = n.get('top3_vote_dist', [0]*10)
+    _maxv = max(_dist) if max(_dist) > 0 else 1
+    _order = sorted(range(10), key=lambda x: -_dist[x])
+    _medals = {0: '🥇', 1: '🥈', 2: '🥉', 3: '4', 4: '5'}
+    _bar_rows = ""
+    for _r, _c in enumerate(_order):
+        _w = max(int(_dist[_c] / _maxv * 100), 2)
+        _is_king = _r == 0
+        _row_bg = 'style="background:#fff5f5"' if _is_king else ''
+        _rank_txt = f'<b style="color:var(--red)">票王</b>' if _is_king else f'第{_medals.get(_r, str(_r+1))}名'
+        _bar_rows += (
+            f'<tr {_row_bg}><td style="width:34px;font-weight:700">{_c}</td>'
+            f'<td style="width:44%;position:relative"><div style="height:18px;border-radius:4px;'
+            f'background:{"var(--red)" if _is_king else "#f0d9d7"};width:{_w}%"></div></td>'
+            f'<td style="width:70px;font-weight:700">{_dist[_c]:.1f}</td>'
+            f'<td style="width:70px">{_rank_txt}</td></tr>')
+    hedge_card_html = (
+        f'<div class="card"><b>Hedge 加权投票</b> '
+        f'<span style="color:#999;font-size:12px">本期 {n["target_issue"]} · {n["n_experts"]}专家 · 权重=近{n["win"]}期命中率</span>'
+        f'<div class="tbl-scroll"><div class="tbl-wrap" style="max-height:38vh"><table>'
+        f'<thead><tr><th>数字</th><th>得票（加权合计）</th><th>票数</th><th>名次</th></tr></thead>'
+        f'<tbody>{_bar_rows}</tbody></table></div></div>'
+        f'<div style="margin-top:10px;font-size:12px;color:#666;line-height:1.7">'
+        f'<b style="color:var(--red)">票王 = 杀和尾 {_order[0]}</b>（{_dist[_order[0]]:.1f}票，共识最强）；'
+        f'Top3 票码 = {_order[0]}·{_order[1]}·{_order[2]}。'
+        f'<br>机制：800 公式专家池按近 {n["win"]} 期命中率排序取 Top{n["n_experts"]}，'
+        f'命中率即权重（下限0.02）加权投票，票数最高的数字被「杀掉」。</div></div>')
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -286,6 +295,8 @@ def build_html(d):
   <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数=600专家加权合计</div>
 </div>
 
+{hedge_card_html}
+
 <div class="card">
   <b>预测票码 Top3 命中率</b> <span style="color:#999;font-size:12px">杀3码（和尾 ∉ Top3 即安全）</span>
   <div class="formula-info">下期 {n['target_issue']} 预测票码：{'、'.join(str(c) for c in show_top3)}（票数前3）</div>
@@ -297,11 +308,6 @@ def build_html(d):
   <div class="stat-row"><span>近100期（训练窗尾段）</span>
     <span class="pct">票1 {k100/100*100:.1f}% · 票2 {t2_100/100*100:.1f}% · 票3 {t3_100/100*100:.1f}%</span></div>
   {_note_oos}
-</div>
-
-<div class="card">
-  <b>本期专家投票</b> <span style="color:#999;font-size:12px">（{n['n_experts']} 位专家 · 权重=近 {n['win']} 期命中率）</span>
-  <div class="tbl-wrap" style="max-height:45vh">{experts_html}</div>
 </div>
 
 <div class="card">
