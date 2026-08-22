@@ -134,7 +134,7 @@ def render_sysA(d):
     # 实战记录（A系统回测表更名，含100/200/500/1000期窗口切换）
     bt_card = _render_bt_card('A', d['rows'], '800专家',
         f'第 t 期只用 ≤ t-1 期数据；固定800专家 + 固定机制(win={n["win"]},K={n["n_experts"]}) 确定性重算 → 逐期实战记录。',
-        title='实战记录', sub_note='逐期实战记录（walk-forward，不偷看未来）')
+        title='实战记录', sub_note='逐期实战记录（walk-forward，不偷看未来）', issue_head='预测期号')
 
     # 预测卡
     pred_card = (
@@ -220,11 +220,12 @@ def render_sysB(db):
     return pred_card + hedge_card + stats_card + bt_card
 
 
-def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='逐期真实预测记录（walk-forward，不偷看未来）'):
+def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='逐期真实预测记录（walk-forward，不偷看未来）', issue_head='期号'):
     """回测记录卡片：顶部 100/200/500/1000期 切换按钮 + 杀1命中率联动 + 四个窗口表格。
     sys_id ∈ {'A','B'} 用于区分两套独立切换（localStorage 各自记忆）。
     命中率口径：杀1 = 和尾不在top3[0]（票王命中）。
     title: 卡片标题（A系统=实战记录，B系统=回测表）
+    issue_head: 表头第一列（A系统=预测期号，B系统=期号）
     """
     wins = [100, 200, 500, 1000]
     # 命中率：从近到远取窗口（rows 已是近→远）
@@ -248,7 +249,7 @@ def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='�
         tbl_html += (
             f'<div id="bt-tbl-{sys_id}-{W}" class="bt-win-tbl" {disp}>'
             f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
-            f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th></tr></thead>'
+            f'<thead><tr><th>{issue_head}</th><th>号码</th><th>和尾</th><th>杀1</th></tr></thead>'
             f'<tbody>{rows_html}</tbody></table></div></div></div>')
     # 窗口切换按钮（默认1000 active）
     btns = ""
