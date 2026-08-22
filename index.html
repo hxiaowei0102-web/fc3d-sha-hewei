@@ -49,6 +49,7 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 .sys-panel{display:none}
 .sys-panel.on{display:block}
 .sys-badge{display:inline-block;font-size:11px;color:#fff;background:var(--red);border-radius:9px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.sys-btn.active .sys-badge{background:#fff;color:var(--red)}
 .sys-badge.gray{background:#999}
 /* ── 回测表窗口切换（2026-08-22）── */
 .win-switch{display:flex;gap:8px;margin:10px 0 6px;flex-wrap:wrap}
@@ -75,7 +76,7 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 <div class="sub">数据至 2026223 期（948）· 共 8731 期 · 两套引擎共用同一份数据</div>
 
 <div class="sys-switch">
-  <button class="sys-btn active" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">当前</span></button>
+  <button class="sys-btn active" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">v3</span></button>
   <button class="sys-btn" data-sys="B" onclick="switchSys('B')">5专家 <span class="sys-badge gray">v2.0</span></button>
 </div>
 

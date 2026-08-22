@@ -4,11 +4,12 @@
 ==================================================================
 读 cache/result.json, 输出一个完全自包含的单文件 HTML（纯静态渲染，非 JS 动态）。
 当前版式：卡片1(期号+三球+得票数) + Hedge 加权投票详情卡，浅色移动优先。
-算法数据为当前 v3.2 锁定模式：3931万公式穷举 800 专家池【永久固定】，
+算法数据为当前 v3 锁定模式：3931万公式穷举 800 专家池【永久固定】，
 win/k 参数【锁定】→ 每天发布的预测 = 开奖完回测表同一期数值（确定性，可对账）。
 """
 import json
 import os
+import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_JSON = os.path.join(BASE_DIR, 'cache', 'result.json')
@@ -60,6 +61,7 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 .sys-panel{display:none}
 .sys-panel.on{display:block}
 .sys-badge{display:inline-block;font-size:11px;color:#fff;background:var(--red);border-radius:9px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.sys-btn.active .sys-badge{background:#fff;color:var(--red)}
 .sys-badge.gray{background:#999}
 /* ── 回测表窗口切换（2026-08-22）── */
 .win-switch{display:flex;gap:8px;margin:10px 0 6px;flex-wrap:wrap}
@@ -306,7 +308,7 @@ def build_html(d, db):
 <div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 两套引擎共用同一份数据</div>
 
 <div class="sys-switch">
-  <button class="sys-btn active" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">当前</span></button>
+  <button class="sys-btn active" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">v3</span></button>
   <button class="sys-btn" data-sys="B" onclick="switchSys('B')">5专家 <span class="sys-badge gray">v2.0</span></button>
 </div>
 
