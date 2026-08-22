@@ -30,6 +30,6 @@ jobs:
         run: |
           git config user.name "fc3d-bot"
           git config user.email "bot@fc3d.local"
-          git add fc3d-history.csv index.html hedge_prediction.json cache/result.json cache/pool.json cache/predictions.json ledger.py engine.py formulas.py bruteforce500.py hedge_core.py hedge_engine.py fetch.py gen_site.py update_v3.py update.py fetch_data.py .github/workflows/daily.yml
+          git add fc3d-history.csv index.html cache/result.json cache/pool.json cache/predictions.json ledger.py engine.py formulas.py bruteforce500.py hedge_core.py hedge_engine.py fetch.py gen_site.py update_v3.py update.py fetch_data.py .github/workflows/daily.yml
           git diff --staged --quiet || git commit -m "auto: $(date -u +'%Y-%m-%d %H:%M') UTC"
           git push
