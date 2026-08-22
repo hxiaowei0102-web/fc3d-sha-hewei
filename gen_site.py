@@ -27,7 +27,14 @@ h1{font-size:19px}.sub{color:#888;font-size:12px;margin-top:4px}
 .ball-votes{text-align:center;font-size:13px;color:#999;margin-top:8px;font-family:ui-monospace,Consolas,monospace}
 .ball-label{text-align:center;font-size:13px;color:#666;margin-top:4px}
 .issue{text-align:center;font-size:15px}.issue b{color:var(--red);font-size:20px}
-.formula-info{text-align:center;font-size:12px;color:#888;margin:8px 0}
+.issue-flex{display:grid;grid-template-columns:1fr auto 1fr;align-items:baseline;gap:10px;text-align:center}
+.issue-flex b{color:var(--red);line-height:1.15;margin-right:-2px;justify-self:center}
+.issue-pre{color:#444;font-size:14px;white-space:nowrap;justify-self:end}
+.issue-post{color:#444;font-size:14px;white-space:nowrap;justify-self:start}
+@media (max-width:480px){
+  .issue-flex{flex-wrap:nowrap}
+  .issue-flex b{font-size:28px !important}
+}.formula-info{text-align:center;font-size:12px;color:#888;margin:8px 0}
 .stat-row{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line);font-size:15px}
 .stat-row:last-child{border-bottom:none}.pct{font-weight:700;color:var(--green)}
 .exp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;list-style:none}
@@ -275,7 +282,7 @@ def build_html(d):
 <div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（固定专家 · K={n['n_experts']}）</div>
 
 <div class="card">
-  <div class="issue">预测期号 <b style="font-size:36px;letter-spacing:3px">{n['target_issue']}</b> 期</div>
+  <div class="issue-flex"><span class="issue-pre">预测期号</span><b style="font-size:32px;letter-spacing:1px">{n['target_issue']}</b><span class="issue-post">期</span></div>
   <div class="pick-card" style="gap:8px;margin-top:14px">{ball3_html}</div>
   <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数=600专家加权合计</div>
 </div>
