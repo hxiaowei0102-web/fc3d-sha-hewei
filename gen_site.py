@@ -218,9 +218,9 @@ def render_sysB(db):
 
 
 def _render_bt_card(sys_id, rows, sys_name, note):
-    """回测表卡片：顶部 100/200/500/1000期 切换按钮 + 杀1/杀2/杀3命中率联动 + 四个窗口表格。
+    """回测表卡片：顶部 100/200/500/1000期 切换按钮 + 杀1命中率联动 + 四个窗口表格。
     sys_id ∈ {'A','B'} 用于区分两套独立切换（localStorage 各自记忆）。
-    命中率口径：杀1 = 和尾不在top3[0]；杀2 = 和尾不在top3[0:2]；杀3 = 和尾不在top3[0:3]。
+    命中率口径：杀1 = 和尾不在top3[0]（票王命中）。
     """
     wins = [100, 200, 500, 1000]
     # 命中率：从近到远取窗口（rows 已是近→远）
@@ -228,17 +228,13 @@ def _render_bt_card(sys_id, rows, sys_name, note):
     for W in wins:
         seg = rows[:W]
         n = len(seg)
-        h1 = sum(1 for r in seg if not _tail_in_top3(r, 1))
-        h2 = sum(1 for r in seg if not _tail_in_top3(r, 2))
-        h3 = sum(1 for r in seg if not _tail_in_top3(r, 3))
+        h1 = sum(1 for r in seg if not _tail_in_top3(r))
         p1 = h1 / n * 100 if n else 0
-        p2 = h2 / n * 100 if n else 0
-        p3 = h3 / n * 100 if n else 0
         rate_html += (
             f'<div class="stat-row" id="bt-rate-{sys_id}-{W}" style="display:none">'
             f'<span>命中率（近{W}期）</span>'
-            f'<span class="pct">杀1 {p1:.2f}% · 杀2 {p2:.2f}% · 杀3 {p3:.2f}%'
-            f'<span style="color:#999;font-size:12px">（{h1}/{h2}/{h3}）</span></span></div>')
+            f'<span class="pct">杀1 {p1:.2f}%'
+            f'<span style="color:#999;font-size:12px">（{h1}/{n}）</span></span></div>')
     # 四个窗口的表格容器（默认1000期显示）
     tbl_html = ""
     for W in wins:
@@ -248,7 +244,7 @@ def _render_bt_card(sys_id, rows, sys_name, note):
         tbl_html += (
             f'<div id="bt-tbl-{sys_id}-{W}" class="bt-win-tbl" {disp}>'
             f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
-            f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
+            f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th></tr></thead>'
             f'<tbody>{rows_html}</tbody></table></div></div></div>')
     # 窗口切换按钮（默认1000 active）
     btns = ""
@@ -268,28 +264,24 @@ def _render_bt_card(sys_id, rows, sys_name, note):
         f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">{note}</div></div>')
 
 
-def _tail_in_top3(r, k):
-    """和尾是否落在该期杀码 top3 的前 k 个里（k=1/2/3）。"""
+def _tail_in_top3(r):
+    """和尾是否等于该期杀码 top3[0]（票王）。杀1命中 = 和尾不在 top3[0]。"""
     tail = sum(int(c) for c in r['num']) % 10
-    return tail in r['top3'][:k]
+    return tail == r['top3'][0]
 
 
 def _render_bt_rows(rows):
-    """两系统共用的回测表行渲染：只把杀错的单个数字变红（独立判断）。"""
+    """两系统共用的回测表行渲染：只显示杀1（票王），杀错变红（独立判断）。"""
     out = ""
     for r in rows:
         tail = sum(int(c) for c in r['num']) % 10
-        top3 = r['top3']
-        def _cell(code):
-            if code == tail:
-                return f'<td class="miss" style="font-weight:700">{code}</td>'
-            return f'<td style="font-weight:700">{code}</td>'
-        cells = "".join(_cell(top3[i]) for i in range(3))
+        kill1 = r['top3'][0]
+        cell = f'<td class="miss" style="font-weight:700">{kill1}</td>' if kill1 == tail else f'<td style="font-weight:700">{kill1}</td>'
         out += (
             f'<tr><td class="iss">{esc(r["issue"])}</td>'
             f'<td class="num">{r["num"]}</td>'
             f'<td class="num" style="color:var(--green)">{tail}</td>'
-            f'{cells}</tr>')
+            f'{cell}</tr>')
     return out
 
 
