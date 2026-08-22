@@ -105,7 +105,7 @@ def main():
         # 穷举/复用完成后锁定参数（win=40,k=56 → 与 v2.0 相同"发布=回测"确定性）
         _lock_pool_params()
 
-    # ---- [3/5][4/5] 500期回测 + 下期预测（锁定参数跳过网格扫描）----
+    # ---- [3/5][4/5] 1000期回测 + 下期预测（锁定参数跳过网格扫描）----
     import hedge_core as _hc
     if os.path.exists('cache/pool.json'):
         with open('cache/pool.json', 'r', encoding='utf-8') as f:
@@ -114,7 +114,7 @@ def main():
             print(f"\n[3/5] 参数已锁定 win={_pj['locked']['win']} k={_pj['locked']['k']}（确定性模式，跳过网格扫描）")
         else:
             print(f"\n[3/5] 网格扫描（{len(_hc.WIN_GRID) * len(_hc.K_GRID)}组合 win×K 自动选优）")
-    print("[4/5] 500期 Hedge 逐期真实回测 + 下期预测")
+    print("[4/5] 1000期 Hedge 逐期真实回测 + 下期预测")
     need_result = True
     if os.path.exists('cache/result.json') and not args.force:
         with open('cache/result.json', 'r', encoding='utf-8') as f:

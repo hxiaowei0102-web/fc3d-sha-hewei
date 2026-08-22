@@ -28,7 +28,8 @@ import numpy as np
 from engine import load_data, get_next_issue
 from formulas import feat_list, FEAT_VERSION, NF
 
-WINDOW = 500          # 回测窗口 / 穷举窗口
+WINDOW = 500          # 专家池挑选窗口 / 穷举窗口（锁定800专家依据，严禁改动）
+BT_WINDOW = 1000      # 回测窗口（老板要求1000期回测表；锁定模式下与挑选窗口解耦）
 WIN_GRID = (40, 50, 60, 70, 80, 90, 100, 120, 150, 180, 200, 240)   # 网格扫描（12×12=144组合）
 K_GRID = (16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60)  # 大K扩展
 SMOOTH = 0.02         # 权重下限
@@ -43,25 +44,25 @@ CSV = 'fc3d-history.csv'
 
 def build_matrices(issues, hh, tt, oo, pool):
     """扩展 pred/hit 矩阵：列 j 对应数据期 L0+j。
-    回测期 t∈[N-WINDOW,N) → 列 j=t-L0∈[150,650)，近win窗口 hit[:, j-win:j] 恒满。
-    末列 j=N-L0=650 对应下一期预测（特征用第N-1、N-2期数据，未用第N期开奖）。
+    回测期 t∈[N-BT_WINDOW,N) → 列 j=t-L0∈[240,1240)，近win窗口 hit[:, j-win:j] 恒满。
+    末列 j=N-L0 对应下一期预测（特征用第N-1、N-2期数据，未用第N期开奖）。
     目标 = 和尾 (b+s+g)%10。
     返回 (pred, hit, L0, tail_arr)
     """
     N = len(hh)
-    L0 = N - WINDOW - WIN_MAX
-    assert L0 >= 2, f"数据不足：需要至少 {WINDOW + WIN_MAX + 2} 期，当前 {N}"
+    L0 = N - BT_WINDOW - WIN_MAX
+    assert L0 >= 2, f"数据不足：需要至少 {BT_WINDOW + WIN_MAX + 2} 期，当前 {N}"
     # 特征：数据期 t 的特征由 期t-1、期t-2 计算
     F_ext = np.array([
         feat_list(hh[t - 1], tt[t - 1], oo[t - 1],
                   prev=(hh[t - 2], tt[t - 2], oo[t - 2]))
         for t in range(L0, N + 1)
-    ], dtype=np.int16)                                     # (651, 59)
+    ], dtype=np.int16)                                     # (1241, 59)
     # 被预测和尾：末列占位（预测期，仅用于结构一致，不参与回测）
     tail_all = [(hh[i] + tt[i] + oo[i]) % 10 for i in range(N)]
-    at_ext = np.concatenate([np.asarray(tail_all[L0:N], dtype=np.int16), [0]])  # (651,)
+    at_ext = np.concatenate([np.asarray(tail_all[L0:N], dtype=np.int16), [0]])  # (1241,)
     K = len(pool)
-    pred = np.zeros((K, N - L0 + 1), dtype=np.int16)       # (240, 651)
+    pred = np.zeros((K, N - L0 + 1), dtype=np.int16)       # (800, 1241)
     for i, exp in enumerate(pool):
         cols = np.array([idx for _, idx in exp['terms']], dtype=np.intp)
         coeffs = np.array([c for c, _ in exp['terms']], dtype=np.int16)
@@ -71,7 +72,7 @@ def build_matrices(issues, hh, tt, oo, pool):
             pred[i, :] = ((F_ext[:, cols] * coeffs[None, :]).sum(axis=1) + exp['const']) % 10
     hit = (pred != at_ext[None, :])
     # 断言防未来信息：回测列 j 的 pred 仅由 F_ext[j] 一行（期 L0+j-1 / L0+j-2）算出
-    assert hit.shape[1] == N - L0 + 1 == WINDOW + WIN_MAX + 1
+    assert hit.shape[1] == N - L0 + 1 == BT_WINDOW + WIN_MAX + 1
     return pred, hit, L0, np.asarray(tail_all, dtype=np.int16)
 
 
@@ -97,7 +98,7 @@ def _top3_codes(kill, votes):
 # ---------------------------------------------------------------- 网格扫描
 
 def grid_scan(hit, pred, tt_arr, L0, win_grid=None, k_grid=None):
-    """72 组合 (win,k) 在500期回测上扫描命中率。
+    """72 组合 (win,k) 在回测窗口上扫描命中率。
     与 run_backtest 共用 hedge_vote（保证扫描口径 = 回测口径，无平局差异）。
     返回 (results[72项], best)。选优口径：命中率 → k更大 → win更大。"""
     if win_grid is None:
@@ -105,7 +106,7 @@ def grid_scan(hit, pred, tt_arr, L0, win_grid=None, k_grid=None):
     if k_grid is None:
         k_grid = K_GRID
     N = len(tt_arr)
-    start = N - WINDOW
+    start = N - BT_WINDOW
     results = []
     for win in win_grid:
         for k in k_grid:
@@ -116,7 +117,7 @@ def grid_scan(hit, pred, tt_arr, L0, win_grid=None, k_grid=None):
                 if kill != int(tt_arr[t]):
                     hits += 1
             results.append({'win': win, 'k': k, 'hits': hits,
-                            'total': WINDOW, 'rate': round(hits / WINDOW, 4)})
+                            'total': BT_WINDOW, 'rate': round(hits / BT_WINDOW, 4)})
     results.sort(key=lambda r: (-r['rate'], -r['k'], -r['win']))
     return results, results[0]
 
@@ -124,9 +125,9 @@ def grid_scan(hit, pred, tt_arr, L0, win_grid=None, k_grid=None):
 # ---------------------------------------------------------------- 500期回测
 
 def run_backtest(pool, pred, hit, L0, issues, hh, tt, oo, best_win, best_k):
-    """500期逐期真实回测（walk-forward），返回 (rows[近期在上], summary)。"""
+    """1000期逐期真实回测（walk-forward，近期在上），返回 (rows, summary)。"""
     N = len(hh)
-    start = N - WINDOW
+    start = N - BT_WINDOW
     rows = []
     for t in range(start, N):
         j = t - L0
@@ -164,7 +165,7 @@ def run_backtest(pool, pred, hit, L0, issues, hh, tt, oo, best_win, best_k):
     pool_avg = float(hit[:, j_end - WINDOW + 1:j_end + 1].mean())
     rows.reverse()                                        # 近期→远期
     summary = {
-        'hit': int(sum(hits)), 'total': WINDOW, 'rate': round(rate, 4),
+        'hit': int(sum(hits)), 'total': BT_WINDOW, 'rate': round(rate, 4),
         'baseline': BASELINE,
         'pool_avg': round(pool_avg, 4),
         'max_win': int(max_win), 'max_lose': int(max_lose),
@@ -253,7 +254,7 @@ def main():
         # ★ 锁定模式：参数固定，跳过网格扫描 → 发布值=回测值
         best_win, best_k = int(locked['win']), int(locked['k'])
         scan = []
-        best = {'win': best_win, 'k': best_k, 'hits': None, 'total': WINDOW, 'rate': None,
+        best = {'win': best_win, 'k': best_k, 'hits': None, 'total': BT_WINDOW, 'rate': None,
                 'locked': True, 'note': '参数锁定(确定性模式)，不再每日重扫'}
         print(f"★ 锁定模式: win={best_win}, k={best_k}（确定性：发布值=回测值，跳过网格扫描）")
     else:
@@ -264,7 +265,7 @@ def main():
 
     rows, summary = run_backtest(pool, pred, hit, L0, issues, hh, tt, oo,
                                  best_win, best_k)
-    print(f"500期回测: 命中 {summary['hit']}/{summary['total']} = {summary['rate']*100:.2f}% "
+    print(f"{BT_WINDOW}期回测: 命中 {summary['hit']}/{summary['total']} = {summary['rate']*100:.2f}% "
           f"(基线 {BASELINE*100:.0f}%)  最大连错 {summary['max_lose']}")
 
     nxt = next_prediction(pool, pred, hit, L0, issues, hh, tt, oo, fixed_info,
