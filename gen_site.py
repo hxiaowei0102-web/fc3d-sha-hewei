@@ -53,6 +53,15 @@ td.fname{font-size:11px;color:#999;max-width:130px;overflow:hidden;text-overflow
 .dot-ok{background:var(--green)}.dot-bad{background:var(--red)}
 .pick-card{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
 .pick-card .ball{width:64px;height:64px;font-size:34px}
+/* ── 双系统切换（2026-08-22）── */
+.sys-switch{display:flex;gap:10px;justify-content:center;margin:12px 0 4px}
+.sys-btn{border:1.5px solid var(--line);background:var(--card);color:#555;border-radius:20px;padding:7px 18px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.sys-btn.active{background:var(--red);border-color:var(--red);color:#fff}
+.sys-panel{display:none}
+.sys-panel.on{display:block}
+.sys-badge{display:inline-block;font-size:11px;color:#fff;background:var(--red);border-radius:9px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.sys-badge.gray{background:#999}
+@media (max-width:480px){.sys-btn{font-size:13px;padding:6px 14px}}
 @media (max-width:480px){
   body{padding:8px}
   .card{padding:12px;border-radius:10px;margin-bottom:10px}
@@ -73,23 +82,22 @@ def esc(s):
     return str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
-def build_html(d):
+# ─────────────────────────── 系统A：当前800专家 ───────────────────────────
+def render_sysA(d):
     n = d['next']
     s = d['summary']
     di = d['data_info']
-    pi = d['pool_info']
 
-    # 卡片1 = 只显示票王（杀和尾）1 个红球
-    king = int(n['kill'])                # 票王 = 杀和尾
-    _vote_dist = n.get('top3_vote_dist', [0]*10)
-    ball1_html = (
+    # 预测球（票王1个红球）
+    king = int(n['kill'])
+    _dist = n.get('top3_vote_dist', [0]*10)
+    ball_html = (
         f'<div style="display:flex;justify-content:center;align-items:center;margin:16px 0">'
         f'<div style="display:flex;flex-direction:column;align-items:center">'
         f'<div class="ball">{king}</div>'
-        f'<div class="ball-votes">{_vote_dist[king]:.1f} 票</div></div></div>')
+        f'<div class="ball-votes">{_dist[king]:.1f} 票</div></div></div>')
 
-    # ── 2c. Hedge 加权投票详情卡（10数字得票条形图 + 前5名 + 机制说明）──
-    _dist = n.get('top3_vote_dist', [0]*10)
+    # Hedge 加权投票详情卡
     _maxv = max(_dist) if max(_dist) > 0 else 1
     _order = sorted(range(10), key=lambda x: -_dist[x])
     _medals = {0: '🥇', 1: '🥈', 2: '🥉', 3: '4', 4: '5'}
@@ -105,7 +113,7 @@ def build_html(d):
             f'background:{"var(--red)" if _is_king else "#f0d9d7"};width:{_w}%"></div></td>'
             f'<td style="width:70px;font-weight:700">{_dist[_c]:.1f}</td>'
             f'<td style="width:70px">{_rank_txt}</td></tr>')
-    hedge_card_html = (
+    hedge_card = (
         f'<div class="card"><b>Hedge 加权投票</b> '
         f'<span style="color:#999;font-size:12px">本期 {n["target_issue"]} · {n["n_experts"]}专家 · 权重=近{n["win"]}期命中率</span>'
         f'<div class="tbl-scroll"><div class="tbl-wrap" style="max-height:38vh"><table>'
@@ -114,29 +122,14 @@ def build_html(d):
         f'<div style="margin-top:10px;font-size:12px;color:#666;line-height:1.7">'
         f'<b style="color:var(--red)">票王 = 杀和尾 {_order[0]}</b>（{_dist[_order[0]]:.1f}票，共识最强）；'
         f'Top3 票码 = {_order[0]}·{_order[1]}·{_order[2]}。'
-        f'<br>机制：800 公式专家池按近 {n["win"]} 期命中率排序取 Top{n["n_experts"]}，'
+        f'<br>机制：3931万公式穷举 800 专家池（按近 {n["win"]} 期命中率取 Top{n["n_experts"]}），'
         f'命中率即权重（下限0.02）加权投票，票数最高的数字被「杀掉」。</div></div>')
 
-    # ── 2d. 1000期回测表（近期→远期 · 逐期真实预测记录）──
-    bt_rows_html = ""
-    for r in d['rows'][:1000]:
-        tail = sum(int(c) for c in r['num']) % 10
-        top3 = r['top3']
-        # 只把杀错的那一格数字变红：每格独立判断，和尾恰好=该数字才标红；
-        # 和尾=杀2 只红杀2格，杀1格不受影响（不做累积判断）
-        def _cell(code):
-            if code == tail:
-                return f'<td class="miss" style="font-weight:700">{code}</td>'
-            return f'<td style="font-weight:700">{code}</td>'
-        cells = "".join(_cell(top3[i]) for i in range(3))
-        bt_rows_html += (
-            f'<tr><td class="iss">{esc(r["issue"])}</td>'
-            f'<td class="num">{r["num"]}</td>'
-            f'<td class="num" style="color:var(--green)">{tail}</td>'
-            f'{cells}</tr>')
+    # 1000期回测表
+    bt_rows_html = _render_bt_rows(d['rows'])
     bt_total = len(d['rows'])
     bt_hits = sum(1 for r in d['rows'] if r['hit'])
-    bt_card_html = (
+    bt_card = (
         f'<div class="card"><b>1000期回测表</b> '
         f'<span style="color:#999;font-size:12px">近→远 · 逐期真实预测记录（walk-forward，不偷看未来）</span>'
         f'<div class="stat-row"><span>杀1命中（1000期）</span>'
@@ -147,47 +140,192 @@ def build_html(d):
         f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
         f'<tbody>{bt_rows_html}</tbody></table></div></div>'
         f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
-        f'第 t 期预测只用 ≤ t-1 期数据；固定800专家 + 固定机制(win=40,K=650) 确定性重算 → 逐期真实预测记录。</div></div>')
+        f'第 t 期预测只用 ≤ t-1 期数据；固定800专家 + 固定机制(win={n["win"]},K={n["n_experts"]}) 确定性重算 → 逐期真实预测记录。</div></div>')
+
+    # 预测卡
+    pred_card = (
+        f'<div class="card">'
+        f'<div class="issue-flex"><span class="issue-pre">预测期号</span><b style="font-size:32px;letter-spacing:1px">{n["target_issue"]}</b><span class="issue-post">期</span></div>'
+        f'<div style="margin-top:14px">{ball_html}</div>'
+        f'<div class="formula-info" style="margin-top:14px">Hedge {n["n_experts"]}专家加权投票 · win={n["win"]} · 参数已锁定 · 票数={n["n_experts"]}专家加权合计</div>'
+        f'</div>')
+    return pred_card + hedge_card + bt_card
+
+
+# ─────────────────────────── 系统B：v2.0 五专家 ───────────────────────────
+def render_sysB(db):
+    pred = db['prediction']
+    meta = db['meta']
+    ws = db['window_stats']
+    rows = db['rows']
+
+    # 预测球
+    king = int(pred['kill'])
+    _dist = pred.get('votes', [0]*10)
+    ball_html = (
+        f'<div style="display:flex;justify-content:center;align-items:center;margin:16px 0">'
+        f'<div style="display:flex;flex-direction:column;align-items:center">'
+        f'<div class="ball">{king}</div>'
+        f'<div class="ball-votes">{_dist[king]:.1f} 票</div></div></div>')
+
+    # 5专家加权投票详情卡
+    _maxv = max(_dist) if max(_dist) > 0 else 1
+    _order = sorted(range(10), key=lambda x: -_dist[x])
+    _medals = {0: '🥇', 1: '🥈', 2: '🥉', 3: '4', 4: '5'}
+    _bar_rows = ""
+    for _r, _c in enumerate(_order):
+        _w = max(int(_dist[_c] / _maxv * 100), 2)
+        _is_king = _r == 0
+        _row_bg = 'style="background:#fff5f5"' if _is_king else ''
+        _rank_txt = f'<b style="color:var(--red)">票王</b>' if _is_king else f'第{_medals.get(_r, str(_r+1))}名'
+        _bar_rows += (
+            f'<tr {_row_bg}><td style="width:34px;font-weight:700">{_c}</td>'
+            f'<td style="width:44%;position:relative"><div style="height:18px;border-radius:4px;'
+            f'background:{"var(--red)" if _is_king else "#f0d9d7"};width:{_w}%"></div></td>'
+            f'<td style="width:70px;font-weight:700">{_dist[_c]:.1f}</td>'
+            f'<td style="width:70px">{_rank_txt}</td></tr>')
+    # 各专家本期杀码
+    exp_txt = " · ".join(f"{k}={v}" for k, v in pred.get('experts', {}).items())
+    hedge_card = (
+        f'<div class="card"><b>Hedge 加权投票</b> '
+        f'<span style="color:#999;font-size:12px">本期 {pred["target_issue"]} · 5专家 · 权重=近{meta["window"]}期命中率</span>'
+        f'<div class="tbl-scroll"><div class="tbl-wrap" style="max-height:38vh"><table>'
+        f'<thead><tr><th>数字</th><th>得票（加权合计）</th><th>票数</th><th>名次</th></tr></thead>'
+        f'<tbody>{_bar_rows}</tbody></table></div></div>'
+        f'<div style="margin-top:10px;font-size:12px;color:#666;line-height:1.7">'
+        f'<b style="color:var(--red)">票王 = 杀和尾 {_order[0]}</b>（{_dist[_order[0]]:.1f}票，共识最强）；'
+        f'Top3 票码 = {_order[0]}·{_order[1]}·{_order[2]}。'
+        f'<br>机制：5个手挑公式专家（A9+h1s3+全史频+近50频+转移表），近{meta["window"]}期命中率做权重'
+        f'（下限0.02）加权投票，票数最高的数字被「杀掉」。<br>'
+        f'本期各专家杀码：{exp_txt}</div></div>')
+
+    # 1000期回测表（B系统 rows 每期含 num/top3/hit）
+    bt_rows_html = _render_bt_rows(rows)
+    bt_total = len(rows)
+    bt_hits = sum(1 for r in rows if r['hit'])
+    bt_card = (
+        f'<div class="card"><b>1000期回测表</b> '
+        f'<span style="color:#999;font-size:12px">近→远 · 逐期真实预测记录（walk-forward，不偷看未来）</span>'
+        f'<div class="stat-row"><span>杀1命中（1000期）</span>'
+        f'<span class="pct">{bt_hits}/{bt_total} = {bt_hits/bt_total*100:.2f}%</span></div>'
+        f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
+        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。</div>'
+        f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
+        f'<thead><tr><th>期号</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
+        f'<tbody>{bt_rows_html}</tbody></table></div></div>'
+        f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
+        f'第 t 期预测只用 ≤ t-1 期数据；固定5专家 + 固定机制(win={meta["window"]}) 确定性重算 → 逐期真实预测记录。</div></div>')
+
+    # 命中率汇总（多窗口）
+    stat_rows = ""
+    for W in (100, 200, 500, 1000):
+        w = ws.get(str(W), {})
+        if not w:
+            continue
+        stat_rows += (
+            f'<div class="stat-row"><span>近{W}期</span>'
+            f'<span class="pct">{w["pct"]}% <span style="color:#999;font-size:12px">(基线{w["base_pct"]}%)</span></span></div>')
+    stats_card = (
+        f'<div class="card"><b>多窗口命中率</b> <span style="color:#999;font-size:12px">v2.0五专家 · 全量{meta["full_hit"]}%（基线{meta["full_base"]}%）</span>'
+        f'{stat_rows}</div>')
+
+    # 预测卡
+    pred_card = (
+        f'<div class="card">'
+        f'<div class="issue-flex"><span class="issue-pre">预测期号</span><b style="font-size:32px;letter-spacing:1px">{pred["target_issue"]}</b><span class="issue-post">期</span></div>'
+        f'<div style="margin-top:14px">{ball_html}</div>'
+        f'<div class="formula-info" style="margin-top:14px">Hedge 5专家加权投票 · win={meta["window"]} · 参数已锁定 · 票数=5专家加权合计</div>'
+        f'</div>')
+    return pred_card + hedge_card + stats_card + bt_card
+
+
+def _render_bt_rows(rows):
+    """两系统共用的回测表行渲染：只把杀错的单个数字变红（独立判断）。"""
+    out = ""
+    for r in rows[:1000]:
+        tail = sum(int(c) for c in r['num']) % 10
+        top3 = r['top3']
+        def _cell(code):
+            if code == tail:
+                return f'<td class="miss" style="font-weight:700">{code}</td>'
+            return f'<td style="font-weight:700">{code}</td>'
+        cells = "".join(_cell(top3[i]) for i in range(3))
+        out += (
+            f'<tr><td class="iss">{esc(r["issue"])}</td>'
+            f'<td class="num">{r["num"]}</td>'
+            f'<td class="num" style="color:var(--green)">{tail}</td>'
+            f'{cells}</tr>')
+    return out
+
+
+def build_html(d, db):
+    n = d['next']
+    di = d['data_info']
+    db_pred = db['prediction']
+
+    sysA_html = render_sysA(d)
+    sysB_html = render_sysB(db)
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>福彩3D 杀和尾 · Hedge 单杀</title>
+<title>福彩3D 杀和尾 · Hedge 双系统</title>
 <style>{CSS_TEXT}</style>
 </head>
 <body>
-<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 单杀 v3.2</span></h1>
-<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 引擎 v3.2（固定专家 · K={n['n_experts']}）</div>
+<h1>🎯 福彩3D 杀和尾 <span style="font-size:13px;color:#888">Hedge 双系统</span></h1>
+<div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 两套引擎共用同一份数据</div>
 
-<div class="card">
-  <div class="issue-flex"><span class="issue-pre">预测期号</span><b style="font-size:32px;letter-spacing:1px">{n['target_issue']}</b><span class="issue-post">期</span></div>
-  <div style="margin-top:14px">{ball1_html}</div>
-  <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数={n['n_experts']}专家加权合计</div>
+<div class="sys-switch">
+  <button class="sys-btn active" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">当前</span></button>
+  <button class="sys-btn" data-sys="B" onclick="switchSys('B')">5专家 <span class="sys-badge gray">v2.0</span></button>
 </div>
 
-{hedge_card_html}
+<div id="sysA" class="sys-panel on">{sysA_html}</div>
+<div id="sysB" class="sys-panel">{sysB_html}</div>
 
-{bt_card_html}
+<script>
+function switchSys(s){{
+  document.querySelectorAll('.sys-btn').forEach(b=>b.classList.toggle('active', b.dataset.sys===s));
+  document.getElementById('sysA').classList.toggle('on', s==='A');
+  document.getElementById('sysB').classList.toggle('on', s==='B');
+  try{{localStorage.setItem('sha_hewei_sys', s)}}catch(e){{}}
+}}
+(function(){{
+  try{{
+    var s = localStorage.getItem('sha_hewei_sys');
+    if(s === 'B') switchSys('B');
+  }}catch(e){{}}
+}})();
+</script>
 </body>
 </html>
 """
 
 
 def main():
+    # 系统A：当前800专家（cache/result.json）
     with open(CACHE_JSON, 'r', encoding='utf-8') as f:
         data = json.load(f)
     data['scan_count'] = len(data.get('scan', [])) if isinstance(data.get('scan'), list) else 72
-    html = build_html(data)
+    # 系统B：v2.0 五专家（hedge_prediction.json）
+    bpath = os.path.join(BASE_DIR, 'hedge_prediction.json')
+    with open(bpath, 'r', encoding='utf-8') as f:
+        db = json.load(f)
+    html = build_html(data, db)
     with open(OUT_HTML, 'w', encoding='utf-8') as f:
         f.write(html)
     n = data['next']
     s = data['summary']
+    bp = db['prediction']
     print(f"已生成固定网页: {OUT_HTML}")
     print(f"数据至 {data['data_info']['last']} 期 | 公式池 {data['pool_info']['pool_size_total']:,} | 专家池 {data['pool_info']['topk']}")
-    print(f"机制: Hedge(K={n['n_experts']},win={n['win']}) | 回测 {s['hit']}/{s['total']} = {s['rate']*100:.2f}% (基线90%)")
-    print(f"下一期 {n['target_issue']} 杀和尾 {n['kill']}")
+    print(f"[800专家] Hedge(K={n['n_experts']},win={n['win']}) | 回测 {s['hit']}/{s['total']} = {s['rate']*100:.2f}% (基线90%)")
+    print(f"[800专家] 下一期 {n['target_issue']} 杀和尾 {n['kill']}")
+    print(f"[5专家]   Hedge(win={db['meta']['window']}) | 全量 {db['meta']['full_hit']}% (基线{db['meta']['full_base']}%)")
+    print(f"[5专家]   下一期 {bp['target_issue']} 杀和尾 {bp['kill']} (Top3 {bp['top3']})")
     print("双击打开即可浏览，或传到手机查看。")
 
 

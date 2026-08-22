@@ -151,6 +151,34 @@ def build_hedge_kill_fn(kills, tails_arr, b_arr, s_arr, g_arr, T):
     return kill
 
 
+def build_hedge_vote_fn(kills, tails_arr, b_arr, s_arr, g_arr, T):
+    """同 build_hedge_kill_fn，但返回 (kill, votes10)。
+    供 1000 期回测表渲染 top3 使用（票王=杀码，其余按得票降序）。"""
+    def fn(i):
+        lo = max(WARM, i - WIN)
+        if i - lo >= 10:
+            ws = {}
+            for e in EXPERT_KEYS:
+                h = sum(1 for j in range(lo, i) if tails_arr[j] != kills[e][j])
+                ws[e] = max(SMOOTH, h / (i - lo))
+        else:
+            ws = {e: 0.9 for e in EXPERT_KEYS}
+        votes = [0.0] * 10
+        for e in EXPERT_KEYS:
+            if i < T:
+                k = kills[e][i]
+            else:
+                k = expert_kill_at(e, i, tails_arr, b_arr, s_arr, g_arr)
+            votes[k] += ws[e]
+        return max(range(10), key=lambda t: votes[t]), votes
+    return fn
+
+
+def _top3(kill, votes):
+    order = sorted(range(10), key=lambda x: -votes[x])
+    return [kill] + [c for c in order if c != kill][:2]
+
+
 def next_issue_calc(last):
     if not last:
         return "?"
@@ -164,6 +192,7 @@ def run():
     T = len(tails)
     kills, tails_arr, b_arr, s_arr, g_arr = compute_expert_kills(tails)
     kill = build_hedge_kill_fn(kills, tails_arr, b_arr, s_arr, g_arr, T)
+    vote_fn = build_hedge_vote_fn(kills, tails_arr, b_arr, s_arr, g_arr, T)
 
     # 对照基线 h1s3
     def span_at(i):
@@ -173,7 +202,7 @@ def run():
         return (tails_arr[i - 1] + span_at(i - 1) + 3) % 10
 
     # 预测下一期
-    k_next = kill(T)
+    k_next, votes_next = vote_fn(T)
     next_issue = next_issue_calc(tails[-1]["issue"])
 
     # 多窗口命中率 (Hedge vs 基线)
@@ -191,16 +220,19 @@ def run():
     full_hits = sum(1 for i in range(WARM, T) if tails_arr[i] != kill(i))
     full_base = sum(1 for i in range(WARM, T) if tails_arr[i] != h1s3_pred(i))
 
-    # 100期明细 (近→远) + 各专家当期杀码
+    # 1000期回测表 (近→远) + 各专家当期杀码 + top3
+    BT = 1000
     details = []
-    for i in range(T - 1, max(WARM, T - 100) - 1, -1):
-        k = kill(i)
+    for i in range(T - 1, max(WARM, T - BT) - 1, -1):
+        k, v = vote_fn(i)
         exp = {e: kills[e][i] for e in EXPERT_KEYS}
         ok = tails_arr[i] != k
         details.append({
             "issue": tails[i]["issue"],
-            "number": f"{tails[i]['b']}{tails[i]['s']}{tails[i]['g']}",
-            "tail": tails_arr[i], "kill": k, "hit": ok, "experts": exp,
+            "num": f"{tails[i]['b']}{tails[i]['s']}{tails[i]['g']}",
+            "kill": k, "hit": ok, "experts": exp,
+            "top3": _top3(k, v),
+            "votes": [round(float(x), 4) for x in v],
         })
 
     data = {
@@ -215,12 +247,16 @@ def run():
             "full_base": round(full_base / (T - WARM) * 100, 2),
         },
         "prediction": {
-            "next_issue": next_issue,
+            "target_issue": next_issue,
+            "last_issue": tails[-1]["issue"],
+            "last_draw": f"{tails[-1]['b']}{tails[-1]['s']}{tails[-1]['g']}",
             "kill": k_next,
+            "top3": _top3(k_next, votes_next),
+            "votes": [round(float(x), 4) for x in votes_next],
             "experts": {e: expert_kill_at(e, T, tails_arr, b_arr, s_arr, g_arr) for e in EXPERT_KEYS},
         },
         "window_stats": win,
-        "details": details,
+        "rows": details,
     }
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -233,7 +269,8 @@ def run():
         w = win[W]
         print(f"  近{W:>4}期 {w['pct']}%  (基线{w['base_pct']}%, 差{w['diff']:+.2f}pp)")
     print(f"  全量   {data['meta']['full_hit']}%  (基线{data['meta']['full_base']}%)")
-    print(f"\n预测 {next_issue} 期: 杀和尾 {k_next}")
+    print(f"  1000期回测表: {len(details)} 行 (近→远)")
+    print(f"\n预测 {next_issue} 期: 杀和尾 {k_next} (Top3 {data['prediction']['top3']})")
     print(f"  专家投票: {data['prediction']['experts']}")
     print(f"已输出 {OUT}")
     return data

@@ -126,6 +126,11 @@ def main():
         import hedge_core
         hedge_core.main()
 
+    # ---- [4.5/5] v2.0 五专家引擎（双系统B）----
+    print("\n[4.5/5] v2.0 五专家引擎（双系统B）")
+    import hedge_engine
+    hedge_engine.run()
+
     # ---- [5/5] 生成网页 ----
     print("\n[5/5] 生成静态网页")
     import gen_site
