@@ -80,16 +80,14 @@ def build_html(d):
     di = d['data_info']
     pi = d['pool_info']
 
-    # 卡片1 = 直接显示算法预测票码 Top3（票数前三名）
-    show_top3 = list(n['top3_vote'][:3])   # 算法票王 + 票数第2/第3
-
-    # ── 2b. 预测票码 Top3 三球（卡片1：期号 + 三球均分 + 得票数，无标签）──
+    # 卡片1 = 只显示票王（杀和尾）1 个红球
+    king = int(n['kill'])                # 票王 = 杀和尾
     _vote_dist = n.get('top3_vote_dist', [0]*10)
-    ball3_html = "".join(
-        f'<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;padding:0 4px">'
-        f'<div class="ball">{c}</div>'
-        f'<div class="ball-votes">{_vote_dist[c]:.1f} 票</div></div>'
-        for c in show_top3[:3])
+    ball1_html = (
+        f'<div style="display:flex;justify-content:center;align-items:center;margin:16px 0">'
+        f'<div style="display:flex;flex-direction:column;align-items:center">'
+        f'<div class="ball">{king}</div>'
+        f'<div class="ball-votes">{_vote_dist[king]:.1f} 票</div></div></div>')
 
     # ── 2c. Hedge 加权投票详情卡（10数字得票条形图 + 前5名 + 机制说明）──
     _dist = n.get('top3_vote_dist', [0]*10)
@@ -165,7 +163,7 @@ def build_html(d):
 
 <div class="card">
   <div class="issue-flex"><span class="issue-pre">预测期号</span><b style="font-size:32px;letter-spacing:1px">{n['target_issue']}</b><span class="issue-post">期</span></div>
-  <div class="pick-card" style="gap:8px;margin-top:14px">{ball3_html}</div>
+  <div style="margin-top:14px">{ball1_html}</div>
   <div class="formula-info" style="margin-top:14px">Hedge {n['n_experts']}专家加权投票 · win={n['win']} · 参数已锁定 · 票数={n['n_experts']}专家加权合计</div>
 </div>
 
