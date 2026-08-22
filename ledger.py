@@ -49,7 +49,8 @@ def record_publication(nxt, data_last):
     rec = {
         'issue': issue,
         'kill': nxt['kill'],
-        'top2': nxt.get('top3_vote', [])[:2],
+        'top3': nxt.get('top3_vote', [])[:3],
+        'top2': nxt.get('top3_vote', [])[:2],   # 兼容旧渲染/旧记录
         'published_at': datetime.now(BJT).strftime('%Y-%m-%d %H:%M:%S'),
         'data_last': data_last,
         'hit': None,      # 开奖后补标
@@ -75,10 +76,11 @@ def settle_past(issues, hh, tt, oo):
             continue
         rec['tail'] = tail_of[rec['issue']]
         rec['num'] = f"{hh[issues.index(rec['issue'])]}{tt[issues.index(rec['issue'])]}{oo[issues.index(rec['issue'])]}"
-        # 杀1命中 = 和尾 != 票王; 杀2命中 = 和尾 != 次高票（两码独立核对）
+        # 杀1命中 = 和尾 != 票王; 杀2/杀3 命中 = 和尾 != 该码（各自独立核对）
         rec['hit'] = bool(rec['kill'] != rec['tail'])
-        _top2 = rec.get('top2') or []
-        rec['hit2'] = bool(len(_top2) > 1 and _top2[1] != rec['tail'])
+        _top3 = rec.get('top3') or rec.get('top2') or []
+        rec['hit2'] = bool(len(_top3) > 1 and _top3[1] != rec['tail'])
+        rec['hit3'] = bool(len(_top3) > 2 and _top3[2] != rec['tail'])
         changed += 1
     if changed:
         _save(ledger)
@@ -93,12 +95,13 @@ def get_records():
 
 
 def get_stats():
-    """累计命中率统计：settled=已开奖核对数, hits=杀1对数, hits2=杀2对数, rate=杀1累计命中率,
-    rate2=杀2累计命中率, pending=待开奖数"""
+    """累计命中率统计：settled=已开奖核对数, hits=杀1对数, hits2/3=杀2/3对数,
+    rate=杀1累计命中率, rate2/3=杀2/3累计命中率, pending=待开奖数"""
     recs = get_records()
     settled = [r for r in recs if r.get('hit') is not None]
     hits = sum(1 for r in settled if r['hit'])
     hits2 = sum(1 for r in settled if r.get('hit2'))
+    hits3 = sum(1 for r in settled if r.get('hit3'))
     n = len(settled)
     return {
         'total': len(recs),          # 总发布数（含待开奖）
@@ -109,6 +112,9 @@ def get_stats():
         'hits2': hits2,              # 杀2对数
         'misses2': n - hits2,        # 杀2错数
         'rate2': round(hits2 / n * 100, 2) if n else 0.0,  # 杀2累计命中率
+        'hits3': hits3,              # 杀3对数
+        'misses3': n - hits3,        # 杀3错数
+        'rate3': round(hits3 / n * 100, 2) if n else 0.0,  # 杀3累计命中率
         'pending': len(recs) - n,    # 待开奖数
     }
 

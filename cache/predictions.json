@@ -11,7 +11,12 @@
    "data_last": "2026224",
    "hit": null,
    "num": null,
-   "tail": null
+   "tail": null,
+   "top3": [
+    3,
+    6,
+    1
+   ]
   }
  ]
 }
