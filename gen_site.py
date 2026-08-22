@@ -265,9 +265,9 @@ def render_sysB(db):
 
 
 def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='逐期真实预测记录（walk-forward，不偷看未来）', issue_head='期号'):
-    """回测记录卡片：顶部 100/200/500/1000期 切换按钮 + 杀1命中率联动 + 四个窗口表格。
+    """回测记录卡片：顶部 100/200/500/1000期 切换按钮 + 杀1/杀2/杀3命中率联动 + 四个窗口表格。
     sys_id ∈ {'A','B'} 用于区分两套独立切换（localStorage 各自记忆）。
-    命中率口径：杀1 = 和尾不在top3[0]（票王命中）。
+    命中率口径：杀1 = 和尾不在top3[0]（票王命中），杀2 = 不在top3[0:2]，杀3 = 不在top3全组。
     title: 卡片标题（A系统=实战记录，B系统=回测表）
     issue_head: 表头第一列（A系统=预测期号，B系统=期号）
     """
@@ -277,13 +277,18 @@ def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='�
     for W in wins:
         seg = rows[:W]
         n = len(seg)
-        h1 = sum(1 for r in seg if not _tail_in_top3(r))
+        h1 = sum(1 for r in seg if not _tail_in_top3(r, 1))
+        h2 = sum(1 for r in seg if not _tail_in_top3(r, 2))
+        h3 = sum(1 for r in seg if not _tail_in_top3(r, 3))
         p1 = h1 / n * 100 if n else 0
+        p2 = h2 / n * 100 if n else 0
+        p3 = h3 / n * 100 if n else 0
         rate_html += (
             f'<div class="stat-row" id="bt-rate-{sys_id}-{W}" style="display:none">'
             f'<span>命中率（近{W}期）</span>'
-            f'<span class="pct">杀1 {p1:.2f}%'
-            f'<span style="color:#999;font-size:12px">（{h1}/{n}）</span></span></div>')
+            f'<span class="pct">杀1 {p1:.2f}%<span style="color:#999;font-size:12px">（{h1}/{n}）</span>'
+            f'　杀2 {p2:.2f}%<span style="color:#999;font-size:12px">（{h2}/{n}）</span>'
+            f'　杀3 {p3:.2f}%<span style="color:#999;font-size:12px">（{h3}/{n}）</span></span></div>')
     # 四个窗口的表格容器（默认1000期显示）
     tbl_html = ""
     for W in wins:
@@ -293,7 +298,7 @@ def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='�
         tbl_html += (
             f'<div id="bt-tbl-{sys_id}-{W}" class="bt-win-tbl" {disp}>'
             f'<div class="tbl-scroll"><div class="tbl-wrap"><table>'
-            f'<thead><tr><th>{issue_head}</th><th>号码</th><th>和尾</th><th>杀1</th></tr></thead>'
+            f'<thead><tr><th>{issue_head}</th><th>号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
             f'<tbody>{rows_html}</tbody></table></div></div></div>')
     # 窗口切换按钮（默认1000 active）
     btns = ""
@@ -308,29 +313,39 @@ def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='�
         f'<div class="win-switch">{btns}</div>'
         f'{rate_html}'
         f'<div style="margin-top:8px;font-size:12px;color:#999;line-height:1.8">'
-        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。</div>'
+        f'<span class="miss">🔴 红字 = 该数字杀错（和尾恰好=此数）</span>；其余为默认色 = 杀对。'
+        f'杀2=Top2票码（和尾≠杀1且≠杀2才算对），杀3=Top3票码（三码全避才算对）。</div>'
         f'{tbl_html}'
         f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">{note}</div></div>')
 
 
-def _tail_in_top3(r):
-    """和尾是否等于该期杀码 top3[0]（票王）。杀1命中 = 和尾不在 top3[0]。"""
+def _tail_in_top3(r, rank=1):
+    """和尾是否命中该期杀码前 rank 位。
+    rank=1: 是否=top3[0]（杀1命中=否）；rank=2: 是否∈top3[:2]（杀2命中=否）；rank=3: 是否∈top3（杀3命中=否）。"""
     tail = sum(int(c) for c in r['num']) % 10
-    return tail == r['top3'][0]
+    return tail in r['top3'][:rank]
 
 
 def _render_bt_rows(rows):
-    """两系统共用的回测表行渲染：只显示杀1（票王），杀错变红（独立判断）。"""
+    """两系统共用的回测表行渲染：显示杀1/杀2/杀3，杀错的数字变红（各自独立判断）。"""
     out = ""
     for r in rows:
         tail = sum(int(c) for c in r['num']) % 10
-        kill1 = r['top3'][0]
-        cell = f'<td class="miss" style="font-weight:700">{kill1}</td>' if kill1 == tail else f'<td style="font-weight:700">{kill1}</td>'
+        top3 = list(r['top3'])
+        while len(top3) < 3:
+            top3.append('-')
+        cells = ""
+        for _i, _k in enumerate(top3):
+            # 杀错 = 和尾恰好等于该码 → 红字加粗
+            if _k != '-' and _k == tail:
+                cells += f'<td class="miss" style="font-weight:700;color:var(--red)">{_k}</td>'
+            else:
+                cells += f'<td style="font-weight:700">{_k}</td>'
         out += (
             f'<tr><td class="iss">{esc(r["issue"])}</td>'
             f'<td class="num">{r["num"]}</td>'
             f'<td class="num" style="color:var(--green)">{tail}</td>'
-            f'{cell}</tr>')
+            f'{cells}</tr>')
     return out
 
 
