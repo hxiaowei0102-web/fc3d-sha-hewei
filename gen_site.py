@@ -370,12 +370,12 @@ def build_html(d, db):
 <div class="sub">数据至 {di['last']} 期（{di['last_draw']}）· 共 {di['n_issues']} 期 · 两套引擎共用同一份数据</div>
 
 <div class="sys-switch">
-  <button class="sys-btn active" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">v3</span></button>
-  <button class="sys-btn" data-sys="B" onclick="switchSys('B')">5专家 <span class="sys-badge gray">v2.0</span></button>
+  <button class="sys-btn active" data-sys="B" onclick="switchSys('B')">5专家 <span class="sys-badge gray">v2.0</span></button>
+  <button class="sys-btn" data-sys="A" onclick="switchSys('A')">800专家 <span class="sys-badge">v3</span></button>
 </div>
 
-<div id="sysA" class="sys-panel on">{sysA_html}</div>
-<div id="sysB" class="sys-panel">{sysB_html}</div>
+<div id="sysA" class="sys-panel">{sysA_html}</div>
+<div id="sysB" class="sys-panel on">{sysB_html}</div>
 
 <script>
 function switchSys(s){{
@@ -396,7 +396,8 @@ function switchBtWin(sys, w){{
 (function(){{
   try{{
     var s = localStorage.getItem('sha_hewei_sys');
-    if(s === 'B') switchSys('B');
+    if(s === 'A') switchSys('A');
+    else switchSys('B');   // 默认B（含首次访问/存了B）
     ['A','B'].forEach(function(sys){{
       var w = localStorage.getItem('sha_hewei_bt_'+sys);
       if(w && [100,200,500,1000].indexOf(+w)>=0) switchBtWin(sys, +w);
