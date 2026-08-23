@@ -9,14 +9,34 @@
    ],
    "published_at": "2026-08-22 22:43:03",
    "data_last": "2026224",
-   "hit": null,
-   "num": null,
-   "tail": null,
+   "hit": true,
+   "num": "555",
+   "tail": 5,
    "top3": [
     3,
     6,
     1
-   ]
+   ],
+   "hit2": true,
+   "hit3": true
+  },
+  {
+   "issue": "2026226",
+   "kill": 4,
+   "top3": [
+    4,
+    6,
+    0
+   ],
+   "top2": [
+    4,
+    6
+   ],
+   "published_at": "2026-08-23 22:28:23",
+   "data_last": "2026225",
+   "hit": null,
+   "num": null,
+   "tail": null
   }
  ]
 }
