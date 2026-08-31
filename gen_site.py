@@ -128,9 +128,6 @@ def render_sysB(db):
     bt_card = _render_bt_card('B', rows, '5专家',
         f'第 t 期预测只用 ≤ t-1 期数据；固定5专家 + 固定机制(win={meta["window"]}) 确定性重算 → 逐期真实预测记录。')
 
-    # 预测笔记（真实发布台账：每天开奖前发布的预测 + 开奖后自动核对 + 累计命中率）
-    note_card = _render_note_card()
-
     # 预测卡
     pred_card = (
         f'<div class="card">'
@@ -138,57 +135,7 @@ def render_sysB(db):
         f'<div style="margin-top:14px">{ball_html}</div>'
         f'<div class="formula-info" style="margin-top:14px">Hedge 5专家加权投票 · win={meta["window"]} · 参数已锁定 · 票数=5专家加权合计</div>'
         f'</div>')
-    return pred_card + hedge_card + bt_card + note_card
-
-
-def _render_note_card():
-    """预测笔记卡：账本（predictions.json）真实发布记录 + 累计命中率（杀1/杀2/杀3）。"""
-    try:
-        import ledger as _ledger
-        _recs = _ledger.get_records()
-        _st = _ledger.get_stats()
-        _note_rows = ""
-        for _r in _recs[:60]:
-            _issue = _r.get('issue', '?')
-            _kill = _r.get('kill', '?')
-            _top3 = _r.get('top3') or _r.get('top2') or []
-            _kill2 = _top3[1] if len(_top3) > 1 else '?'
-            _kill3 = _top3[2] if len(_top3) > 2 else '?'
-            _hit = _r.get('hit')
-            _hit2 = _r.get('hit2')
-            _hit3 = _r.get('hit3')
-            _num = _r.get('num') or '待开奖'
-            _tail = _r.get('tail')
-
-            def _kstyle(miss):
-                # 杀错(和尾=该码) → 红字加粗；杀对/待开奖 → 默认加粗
-                return 'color:var(--red);font-weight:700' if miss else 'font-weight:700'
-
-            _note_rows += (
-                f'<tr><td class="iss">{_issue}</td>'
-                f'<td style="font-weight:700">{_num}</td>'
-                f'<td style="font-weight:700">{_tail if _tail is not None else "-"}</td>'
-                f'<td style="{_kstyle(_hit is False)}">{_kill}</td>'
-                f'<td style="{_kstyle(_hit2 is False)}">{_kill2}</td>'
-                f'<td style="{_kstyle(_hit3 is False)}">{_kill3}</td></tr>')
-        return (
-            f'<div class="card"><b>预测笔记</b> '
-            f'<span style="color:#999;font-size:12px">5专家 · 每日开奖前真实发布 · 开奖后自动核对（近期在上）</span>'
-            f'<div class="stat-row"><span>累计命中率（已核对{_st["settled"]}期）</span>'
-            f'<span class="pct" style="color:var(--red)">杀1 {_st["rate"]:.2f}%'
-            f'<span style="color:#999;font-size:12px">（{_st["hits"]}对/{_st["misses"]}错）</span>'
-            f'　<span style="color:var(--red)">杀2 {_st["rate2"]:.2f}%'
-            f'<span style="color:#999;font-size:12px">（{_st["hits2"]}对/{_st["misses2"]}错）</span>'
-            f'　<span style="color:var(--red)">杀3 {_st["rate3"]:.2f}%'
-            f'<span style="color:#999;font-size:12px">（{_st["hits3"]}对/{_st["misses3"]}错 · 共发布{_st["total"]}条 · {_st["pending"]}期待开奖）</span></span></span></span></div>'
-            f'<div class="tbl-scroll"><div class="tbl-wrap" style="max-height:38vh"><table>'
-            f'<thead><tr><th>预测期号</th><th>开奖号码</th><th>和尾</th><th>杀1</th><th>杀2</th><th>杀3</th></tr></thead>'
-            f'<tbody>{_note_rows}</tbody></table></div></div>'
-            f'<div style="margin-top:10px;font-size:12px;color:#999;line-height:1.6">'
-            f'每条记录 = 开奖前真实发布的预测（非回测）。<b style="color:var(--red)">红字 = 杀错</b>（开奖和尾=该杀码），开奖后自动标色，累计命中率持续跟踪。'
-            f'数据源更新后本表自动累积，可对账。</div></div>')
-    except Exception as _e:
-        return f'<div class="card"><b>预测笔记</b> <span style="color:#999;font-size:12px">账本未初始化，待首次发布后生成</span></div>'
+    return pred_card + hedge_card + bt_card
 
 
 def _render_bt_card(sys_id, rows, sys_name, note, title='回测表', sub_note='逐期真实预测记录（walk-forward，不偷看未来）', issue_head='期号'):
