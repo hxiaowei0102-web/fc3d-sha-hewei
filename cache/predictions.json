@@ -1674,6 +1674,26 @@
    ],
    "published_at": "2026-11-18 06:07:23",
    "data_last": "2026307",
+   "hit": true,
+   "num": "041",
+   "tail": 5,
+   "hit2": true,
+   "hit3": true
+  },
+  {
+   "issue": "2026309",
+   "kill": 6,
+   "top3": [
+    6,
+    2,
+    0
+   ],
+   "top2": [
+    6,
+    2
+   ],
+   "published_at": "2026-11-19 05:45:15",
+   "data_last": "2026308",
    "hit": null,
    "num": null,
    "tail": null
